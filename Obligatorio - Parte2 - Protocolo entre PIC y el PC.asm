@@ -183,7 +183,7 @@ rutina_letra_A
 
     banksel VALOR_CONVERSION
     movf VALOR_CONVERSION, w
-    call enviar_conversion_usart
+    call enviar_conversion_usart_hexa
 
     call cargar_contexto_case
     return ; rutina_letra_A
@@ -214,7 +214,7 @@ rutina_letra_H
 	call leer_memoria
 	
 	; Envío el dato (contenido en w) por el puerto usart.
-	call enviar_conversion_usart
+	call enviar_conversion_usart_hexa
 	; Envío un salto de linea.
 	movlw d'10'
 	call enviar_w
@@ -252,7 +252,7 @@ rutina_letra_H
 	
 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
 ; usart.
-enviar_conversion_usart	
+enviar_conversion_usart_hexa	
     banksel VALOR_CONVERSION_TEMP
     movwf VALOR_CONVERSION_TEMP
 
@@ -272,19 +272,19 @@ enviar_conversion_usart
     ; Mapeo y envío los valores por el puerto usart.
     banksel VALOR_CONVERSIONL
     movf VALOR_CONVERSIONL, w
-    call mapear_enviar
+    call mapear_enviar_hexa
 	
     banksel VALOR_CONVERSIONH
     movf VALOR_CONVERSIONH, w
-    call mapear_enviar
+    call mapear_enviar_hexa
     
-    return ; enviar_conversion_usart
+    return ; enviar_conversion_usart_hexa
 	
 ; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
-mapear_enviar 
-    call mapear    
+mapear_enviar_hexa 
+    call mapear_hexa
     call enviar_w
-    return ; mapear_enviar
+    return ; mapear_enviar_hexa
 	
 ; Envia el valor del registro w por el puerto USART.
 enviar_w
@@ -296,7 +296,7 @@ enviar_w
     return ; enviar_w
 	
 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
-mapear
+mapear_hexa
     banksel TEMP_W
     movwf TEMP_W
     sublw b'00001001' ; 0x09 -> 9 decimal
@@ -308,17 +308,17 @@ mapear
 
 ; Sumo 30h al valor que tengo en w.
 sumar_30
-	banksel TEMP_W
-	movf TEMP_W, w
-	addlw b'00110000' ; 0x30 -> 48 decimal
-	return ; sumar_30
+    banksel TEMP_W
+    movf TEMP_W, w
+    addlw b'00110000' ; 0x30 -> 48 decimal
+    return ; sumar_30
 
 ; Sumo 37h al valor que tengo en w.
 sumar_37
-	banksel TEMP_W
-	movf TEMP_W, w
-	addlw b'00110111' ; 0x37 -> 55 decimal
-	return ; sumar_37
+    banksel TEMP_W
+    movf TEMP_W, w
+    addlw b'00110111' ; 0x37 -> 55 decimal
+    return ; sumar_37
 	
 ; Inicializa la memoria EEPROM.
 inicializar_eeprom
@@ -350,22 +350,22 @@ inicializar_eeprom
 
 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
 guardar_memoria_VALOR_CONVERSION
-	; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
-	call obtener_siguiente_puntero
-	; Cargo el dato de VALOR_CONVERSION en EEDAT.
-	banksel VALOR_CONVERSION
-	movf VALOR_CONVERSION, w
-	banksel EEDAT
-	movwf EEDAT
-	; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-	banksel SIGUIENTE_PUNTERO
-	movf SIGUIENTE_PUNTERO, w
-	banksel EEADR
-	movwf EEADR
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	return ; guardar_memoria_VALOR_CONVERSION
+    ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
+    call obtener_siguiente_puntero
+    ; Cargo el dato de VALOR_CONVERSION en EEDAT.
+    banksel VALOR_CONVERSION
+    movf VALOR_CONVERSION, w
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    banksel SIGUIENTE_PUNTERO
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; guardar_memoria_VALOR_CONVERSION
 
 ; Obtiene y guarda el siguiente puntero del buffer en memoria.	
 obtener_siguiente_puntero
@@ -384,12 +384,12 @@ obtener_siguiente_puntero
     ; Chequeo que no me pase del buffer.
     sublw 0x49
     ; INICIO IF
-	    btfsc STATUS, C
-	    ; w <= 0x49 THEN
-	    goto $+3
-	    ; ELSE
-	    movlw 0x40
-	    movwf SIGUIENTE_PUNTERO
+	btfsc STATUS, C
+	; w <= 0x49 THEN
+	goto $+3
+	; ELSE
+	movlw 0x40
+	movwf SIGUIENTE_PUNTERO
     ; FIN IF
 
     ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
@@ -502,31 +502,31 @@ realizar_conversion
 
 ; Rutinas de contexto.
 guardar_contexto
-	movwf W_TEMP  ; Guardo w.
-	swapf STATUS, w ; Swap status en w.
-	movwf STATUS_TEMP ; Guardo STATUS.
-	return ; guardar_contexto
+    movwf W_TEMP  ; Guardo w.
+    swapf STATUS, w ; Swap status en w.
+    movwf STATUS_TEMP ; Guardo STATUS.
+    return ; guardar_contexto
 	
 guardar_contexto_case
-	movwf W_TEMP_CASE  ; Guardo w.
-	swapf STATUS, w ; Swap status en w.
-	movwf STATUS_TEMP_CASE ; Guardo STATUS.
-	
-	return ; guardar_contexto_case
+    movwf W_TEMP_CASE  ; Guardo w.
+    swapf STATUS, w ; Swap status en w.
+    movwf STATUS_TEMP_CASE ; Guardo STATUS.
+
+    return ; guardar_contexto_case
     
 cargar_contexto
-	swapf STATUS_TEMP, w
-	movwf STATUS
-	swapf W_TEMP, f
-	swapf W_TEMP, w
-	return ; cargar_contexto
+    swapf STATUS_TEMP, w
+    movwf STATUS
+    swapf W_TEMP, f
+    swapf W_TEMP, w
+    return ; cargar_contexto
 	
 cargar_contexto_case
-	swapf STATUS_TEMP_CASE, w
-	movwf STATUS
-	swapf W_TEMP_CASE, f
-	swapf W_TEMP_CASE, w
-	
-	return ; cargar_contexto_case
+    swapf STATUS_TEMP_CASE, w
+    movwf STATUS
+    swapf W_TEMP_CASE, f
+    swapf W_TEMP_CASE, w
+
+    return ; cargar_contexto_case
 	
 end
