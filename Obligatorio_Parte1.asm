@@ -49,53 +49,53 @@ mainloop
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 interrupt
-	call guardar_contexto
-	
-	; Identifico la interrupcion.
-	banksel PIR1
-	btfsc PIR1, TMR1IF ; Interrupcion timer1?
-	call interrupt_tmr1
-	
-	banksel PIR2
-	btfsc PIR2, EEIF; Interrupcion escritura?
-	call interrupt_eeprom
+    call guardar_contexto
 
-	call cargar_contexto
-	retfie ; interrupt
+    ; Identifico la interrupcion.
+    banksel PIR1
+    btfsc PIR1, TMR1IF ; Interrupcion timer1?
+    call interrupt_tmr1
+
+    banksel PIR2
+    btfsc PIR2, EEIF; Interrupcion escritura?
+    call interrupt_eeprom
+
+    call cargar_contexto
+    retfie ; interrupt
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 configuracion_inicial	
-	; Configuro las entradas de voltaje analogicas (PUERTOA).
-	banksel TRISA
-	bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
-	bsf TRISA, 1 ; Seteo RA1 como entrada (perilla anal贸gica)
-	banksel ANSEL
-	bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
-	bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
-	
-	; Configuracion de la conversi贸n anal贸gica.
-	banksel ADCON1
-	clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd	
-	; Configuraci贸n del reloj y encendido del conversor analogico.
-	banksel ADCON0 
-	movlw b'10000001'
-	movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
-	
-	; Configuro las interrupciones.
-	bsf INTCON, GIE ; Global interrupt enable bit.
+    ; Configuro las entradas de voltaje analogicas (PUERTOA).
+    banksel TRISA
+    bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
+    bsf TRISA, 1 ; Seteo RA1 como entrada (perilla anal骻ica)
+    banksel ANSEL
+    bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
+    bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
+
+    ; Configuracion de la conversi髇 anal骻ica.
+    banksel ADCON1
+    clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd	
+    ; Configuraci髇 del reloj y encendido del conversor analogico.
+    banksel ADCON0 
+    movlw b'10000001'
+    movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
+
+    ; Configuro las interrupciones.
+    bsf INTCON, GIE ; Global interrupt enable bit.
     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
 	
-	; Chequeo inicial de la memoria EEPROM.
-	movlw 0x30
-	call leer_memoria
-	sublw 0x77
-	btfss STATUS, Z
-	goto $+2
-	call inicializar_eeprom
+    ; Chequeo inicial de la memoria EEPROM.
+    movlw 0x30
+    call leer_memoria
+    sublw 0x77
+    btfss STATUS, Z
+    goto $+2
+    call inicializar_eeprom
 	
-	; Configuro el timer1.
-	banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
+    ; Configuro el timer1.
+    banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
     bsf PIE1, TMR1IE    
     banksel PIR1
     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
@@ -105,165 +105,165 @@ configuracion_inicial
     bsf T1CON, T1CKPS0
     bsf T1CON, T1CKPS1
     bcf T1CON, TMR1ON ; Encender el timer.
-	; Reinicio el contador tmr1.
-	call re_iniciar_contador1
-	; Reinicio el timer1.
+    ; Reinicio el contador tmr1.
+    call re_iniciar_contador1
+    ; Reinicio el timer1.
     call re_iniciar_timer1
 	
-	return ; configurar_puertos
+    return ; configurar_puertos
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
 
 ; Inicializa la memoria EEPROM.
 inicializar_eeprom
-	; Inicializo la flag de memoria inicializada.
-	; Cargo 0x30 (Puntero flag del buffer)
-	movlw 0x30
-	banksel EEADR
-	movwf EEADR
-	; Cargo el dato que indica que est谩 inicializada la memoria.
-	movlw 0x77
-	banksel EEDAT
-	movwf EEDAT
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	; Inicializo el puntero inicial del donde arranca el buffer.
-	; Cargo 0x31 (SIGUIENTE_PUNTERO)
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Cargo el dato que indica que est谩 inicializada la memoria.
-	movlw 0x40
-	banksel EEDAT
-	movwf EEDAT
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	return ; inicializar_eeprom
+    ; Inicializo la flag de memoria inicializada.
+    ; Cargo 0x30 (Puntero flag del buffer)
+    movlw 0x30
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que est谩 inicializada la memoria.
+    movlw 0x77
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    ; Inicializo el puntero inicial del donde arranca el buffer.
+    ; Cargo 0x31 (SIGUIENTE_PUNTERO)
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que est谩 inicializada la memoria.
+    movlw 0x40
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; inicializar_eeprom
 
 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
-guardar_memoria_VALOR_CONTADOR
-	; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
-	call obtener_siguiente_puntero
-	; Cargo el dato de VALOR_CONVERSION en EEDAT.
-	banksel VALOR_CONVERSION
-	movf VALOR_CONVERSION, w
-	banksel EEDAT
-	movwf EEDAT
-	; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-	banksel SIGUIENTE_PUNTERO
-	movf SIGUIENTE_PUNTERO, w
-	banksel EEADR
-	movwf EEADR
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	return ; guardar_memoria_VALOR_CONTADOR
+guardar_memoria_VALOR_CONVERSION
+    ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
+    call obtener_siguiente_puntero
+    ; Cargo el dato de VALOR_CONVERSION en EEDAT.
+    banksel VALOR_CONVERSION
+    movf VALOR_CONVERSION, w
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    banksel SIGUIENTE_PUNTERO
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; guardar_memoria_VALOR_CONVERSION
 
 ; Obtiene y guarda el siguiente puntero del buffer en memoria.	
 obtener_siguiente_puntero
-	; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Cargo el valor de memoria en w.
-	call leer_memoria
-	
-	; Sumo 1 al puntero.
-	addlw d'1'
-	banksel SIGUIENTE_PUNTERO
-	movwf SIGUIENTE_PUNTERO
-	
-	; Chequeo que no me pase del buffer.
-	sublw 0x49
-	; INICIO IF
-		btfsc STATUS, C
-		; w <= 0x49 THEN
-		goto $+3
-		; ELSE
-		movlw 0x40
-		movwf SIGUIENTE_PUNTERO
-	; FIN IF
-	
-	; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
-	movf SIGUIENTE_PUNTERO, w
-	banksel EEDAT
-	movwf EEDAT
-	; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Guardo el valor de w en memoria.
-	call guardar_memoria	
-	
-	return ; obtener_siguiente_puntero
+    ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el valor de memoria en w.
+    call leer_memoria
+
+    ; Sumo 1 al puntero.
+    addlw d'1'
+    banksel SIGUIENTE_PUNTERO
+    movwf SIGUIENTE_PUNTERO
+
+    ; Chequeo que no me pase del buffer.
+    sublw 0x49
+    ; INICIO IF
+	    btfsc STATUS, C
+	    ; w <= 0x49 THEN
+	    goto $+3
+	    ; ELSE
+	    movlw 0x40
+	    movwf SIGUIENTE_PUNTERO
+    ; FIN IF
+
+    ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria	
+
+    return ; obtener_siguiente_puntero
 
 ; Leo un valor ya seteado en EEADR de memoria en w.
 leer_memoria
-	banksel EEADR
-	movwf EEADR ; Cargo la direcci贸n.
-	
-	banksel EECON1
-	bcf EECON1, EEPGD ; Apunto a la EEPROM
-	bsf EECON1, RD ; Activo la lectura.
-	banksel EEDAT
-	movf EEDAT, w ; Guardo el valor en w.
-	
-	return ; leer_memoria
+    banksel EEADR
+    movwf EEADR ; Cargo la direcci髇.
+
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, RD ; Activo la lectura.
+    banksel EEDAT
+    movf EEDAT, w ; Guardo el valor en w.
+
+    return ; leer_memoria
 
 guardar_memoria
-	banksel EECON1
-	bcf EECON1, EEPGD ; Apunto a la EEPROM
-	bsf EECON1, WREN ; Activo la escritura.
-	
-	bcf INTCON, GIE ; Desactivo interrupciones.
-	btfsc INTCON, GIE
-	goto $-2
-	
-	; SECCION INTOCABLE
-	movlw 0x55
-	movwf EECON2
-	movlw 0xAA
-	movwf EECON2
-	bsf EECON1, WR ; Se comienza la escritura.
-	; FIN SECCION INTOCABLE
-	
-	bsf INTCON, GIE ; Activo las interrupciones.	
-	return ; guardar_memoria
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, WREN ; Activo la escritura.
+
+    bcf INTCON, GIE ; Desactivo interrupciones.
+    btfsc INTCON, GIE
+    goto $-2
+
+    ; SECCION INTOCABLE
+    movlw 0x55
+    movwf EECON2
+    movlw 0xAA
+    movwf EECON2
+    bsf EECON1, WR ; Se comienza la escritura.
+    ; FIN SECCION INTOCABLE
+
+    bsf INTCON, GIE ; Activo las interrupciones.	
+    return ; guardar_memoria
 	
 ; Configurar CONTADOR_TIMER1
 re_iniciar_contador1
-	banksel CONTADOR_TIMER1
-	movlw d'10'
-	movwf CONTADOR_TIMER1
-	
-	return ; re_iniciar_contador1
+    banksel CONTADOR_TIMER1
+    movlw d'10'
+    movwf CONTADOR_TIMER1
 
-; Rutina de interrupci贸n del tmr1.
+    return ; re_iniciar_contador1
+
+; Rutina de interrupci髇 del tmr1.
 interrupt_tmr1
-	; Decremento el contador.
-	banksel CONTADOR_TIMER1
-	; INICIO IF
-		decfsz CONTADOR_TIMER1, f
-		; CONTADOR_TIMER <> 0 THEN
-		goto $+3
-		; ELSE
-		call guardar_memoria_VALOR_CONTADOR
-		call re_iniciar_contador1
-	; FIN IF
-	call re_iniciar_timer1
-	
-	return ; interrupt_tmr1
+    ; Decremento el contador.
+    banksel CONTADOR_TIMER1
+    ; INICIO IF
+	    decfsz CONTADOR_TIMER1, f
+	    ; CONTADOR_TIMER <> 0 THEN
+	    goto $+3
+	    ; ELSE
+	    call guardar_memoria_VALOR_CONVERSION
+	    call re_iniciar_contador1
+    ; FIN IF
+    call re_iniciar_timer1
+
+    return ; interrupt_tmr1
 
 ; Interrupcion de escritura de la eepron.
 interrupt_eeprom
-	banksel PIR2
-	bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
-	
-	return ; interrupt_eeprom
+    banksel PIR2
+    bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
 
-; Inicia el timer con el valor precargado, para una interrupci贸n cada 100 ms.
+    return ; interrupt_eeprom
+
+; Inicia el timer con el valor precargado, para una interrupci髇 cada 100 ms.
 re_iniciar_timer1
 ;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
     ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
@@ -286,7 +286,7 @@ realizar_conversion
     btfsc ADCON0, GO ; Is conversion done?
     goto $-1 ; No, test again
     
-    ; Obtener el valor de la conversi贸n.
+    ; Obtener el valor de la conversi髇.
     banksel ADRESH
     movf ADRESH, W
     banksel VALOR_CONVERSION

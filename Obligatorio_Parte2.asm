@@ -12,7 +12,7 @@
  __CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
 
 ; Organizacion de la memoria EEPROM.
-; 0x30 -> Flag que indica si estÃ¡ usado el buffer o no.
+; 0x30 -> Flag que indica si está¡ usado el buffer o no.
 ; 0x31 -> Puntero actual del buffer.
 ; 0x40 - 0x49 -> Buffer.
     
@@ -24,18 +24,18 @@ cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
     CONTADOR_1 ; 0x22
     CONTADOR_2 ; 0x23
     CONTADOR_3 ;0x24
-	VALOR_CONVERSION_TEMP
-	VALOR_CONVERSION ; 0x27
-	VALOR_CONVERSIONH
-	VALOR_CONVERSIONL
-	VALOR_CONVERSION_MEMORIA
-	CONTADOR_TIMER1 ; 0x28
-	SIGUIENTE_PUNTERO ; 0X29
-	PUNTERO_ACTUAL
-	TEMP_W ; 0x30
-	STATUS_TEMP_CASE
-	W_TEMP_CASE
-	ITERADOR
+    VALOR_CONVERSION_TEMP ; 0x25
+    VALOR_CONVERSION ; 0x26
+    VALOR_CONVERSIONH ; 0x27
+    VALOR_CONVERSIONL ; 0x28
+    VALOR_CONVERSION_MEMORIA ; 0x29
+    CONTADOR_TIMER1 ; 0x30
+    SIGUIENTE_PUNTERO ; 0X31
+    PUNTERO_ACTUAL ; 0x32
+    TEMP_W ; 0x33
+    STATUS_TEMP_CASE ; 0x34
+    W_TEMP_CASE ; 0x35
+    ITERADOR ; 0x36
 
 endc
    
@@ -65,7 +65,6 @@ interrupt
     btfsc PIR1, TMR1IF ; Interrupcion timer1?
     call interrupt_tmr1
 
-    ; Identifico la interrupcion.
     banksel PIR1
     btfsc PIR1, RCIF ; Interrupcion usart?
     call interrupt_usart
@@ -83,15 +82,15 @@ configuracion_inicial
     ; Configuro las entradas de voltaje analogicas (PUERTOA).
     banksel TRISA
     bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
-    bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analÃ³gica)
+    bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analógica)
     banksel ANSEL
     bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
 
-    ; Configuracion de la conversiÃ³n analÃ³gica.
+    ; Configuracion de la conversión analógica.
     banksel ADCON1
     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd	
-    ; ConfiguraciÃ³n del reloj y encendido del conversor analogico.
+    ; Configuración del reloj y encendido del conversor analogico.
     banksel ADCON0 
     movlw b'10000001'
     movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
@@ -120,15 +119,22 @@ configuracion_inicial
     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
     banksel PIE1 
-    bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepciÃ³n
+    bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
     ; Chequeo inicial de la memoria EEPROM.
     movlw 0x30
     call leer_memoria
+    ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
+    ; valor significa que la memoria está inicializada, sino hay que
+    ; inicializarla.
     sublw 0x77
-    btfss STATUS, Z
-    goto $+2
-    call inicializar_eeprom
+    ; INICIO IF
+	btfss STATUS, Z
+	; 0x30 tiene 0x77
+	goto $+2
+	; 0x30 no tiene 0x77
+	call inicializar_eeprom
+    ; FIN IF
 	
     ; Configuro el timer1.
     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
@@ -150,95 +156,120 @@ configuracion_inicial
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
 
-; Lee el contenido del puerto y lo almacena en el registro w.
+; Lee el contenido del puerto y dervia en un case que indica que letra se
+; ingresó.
 interrupt_usart
     banksel RCREG
     movf RCREG, w
     call case_letras
     return ; interrupt_usart
 	
-; Identifica que letra se leyÃ³ en el puerto USART.	
+; Identifica que letra se leyó en el puerto USART.	
 case_letras
     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
     btfsc STATUS, Z
     call rutina_letra_A
  
-    xorlw b'01000010' ^ b'01000001' ; 0x42 = 'B' (ASCII)
+    xorlw b'01001000' ^ b'01000001' ; 0x48 = 'H' (ASCII)
     btfsc STATUS, Z               
-    call rutina_letra_B
+    call rutina_letra_H
 	
     return ; case_letras
-	
-rutina_letra_B
+
+; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
+; el puerto usart.
+rutina_letra_A
+    call guardar_contexto_case
+
+    banksel VALOR_CONVERSION
+    movf VALOR_CONVERSION, w
+    call enviar_conversion_usart
+
+    call cargar_contexto_case
+    return ; rutina_letra_A
+    
+; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
+; envía por el puerto usart.
+rutina_letra_H
+    call guardar_contexto_case
+    
+    ; Leo el puntero del buffer actual.
     movlw 0x31
     call leer_memoria
-
+    
+    ; Guardo el valor del puntero actual.
     banksel PUNTERO_ACTUAL
     movwf PUNTERO_ACTUAL
+    
+    ; Guardo el valor inicial de ITERADOR.
+    banksel ITERADOR
+    movwf ITERADOR
 
     WhileLoopInicio
-	    banksel ITERADOR
-	    movwf ITERADOR
-	    call enviar_conversion_iterador	
-
-	    banksel PUNTERO_ACTUAL
-	    movf PUNTERO_ACTUAL, w
-	    banksel ITERADOR
-	    subwf ITERADOR, w
-	    btfss STATUS, Z
-	    goto WhileLoopFin
-	    movf ITERADOR, w
-	    ; Chequeo que no me pase del buffer.
-	    sublw 0x49
-	    ; INICIO IF
-		    btfsc STATUS, C
-		    ; w <= 0x49 THEN
-		    goto $+3
-		    ; ELSE
-		    movlw 0x40
-		    movwf ITERADOR
-	    ; FIN IF
-	    goto WhileLoopInicio
-    WhileLoopFin
-
-    return ; rutina_letra_B
-	
-; Toma el valor del puntero iterador y lo envÃ­a por el puerto usart.
-enviar_conversion_iterador
+	; Obtengo el dato que apunta ITERADOR.
 	banksel ITERADOR
 	movf ITERADOR, w
-	
 	banksel EEADR
 	movwf EEADR
 	call leer_memoria
-	call enviar_conversion_usart
-	call enviar_saltolinea_usart
 	
-	return ; enviar_conversion_iterador
-
-enviar_saltolinea_usart
+	; Envío el dato (contenido en w) por el puerto usart.
+	call enviar_conversion_usart
+	; Envío un salto de linea.
 	movlw d'10'
 	call enviar_w
-	return ; enviar_saltolinea_usart
 	
-; Obtiene los bytes de la conversion, los mapea y los envÃ­a por el puerto USART
+	; Incremento ITERADOR.
+	banksel ITERADOR
+	incf ITERADOR, f
+	; Chequeo que no me pase el buffer.
+	movf ITERADOR, w
+	sublw 0x49
+	; INICIO IF
+	    btfsc STATUS, C
+	    ; w <= 0x49 THEN
+	    goto $+3
+	    ; ELSE (ITERADOR > 0x49)
+	    movlw 0x40
+	    movwf ITERADOR
+	; FIN IF
+	
+	; Compruebo que no llegue al PUNTERO_ACTUAL (fin del loop)	
+	banksel PUNTERO_ACTUAL
+	movf PUNTERO_ACTUAL, w
+	banksel ITERADOR
+	subwf ITERADOR, w
+	; INICIO IF
+	    btfss STATUS, Z
+	    ; THEN (ITERADOR = PUNTERO_ACTUAL)
+	    goto $+2
+	    ; ELSE
+	    goto WhileLoopInicio
+	; FIN IF	
+    call cargar_contexto_case
+    
+    return ; rutina_letra_H
+	
+; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
+; usart.
 enviar_conversion_usart	
     banksel VALOR_CONVERSION_TEMP
     movwf VALOR_CONVERSION_TEMP
 
-    ; Obtener el valor de la conversiÃ³n.
+    ; Obtengo los valores High y Low de la conversion.
     andlw d'11110000'
     banksel VALOR_CONVERSIONH
     movwf VALOR_CONVERSIONH
-    swapf VALOR_CONVERSIONH, f 	; Hago swamp para cambiar de lugar y tener todos en los bits
-							    ; menos significativos.
+    swapf VALOR_CONVERSIONH, f 	; Hago swamp para cambiar de lugar y 
+				; tener todos en los bits menos significativos.
     
     banksel VALOR_CONVERSION_TEMP
     movf VALOR_CONVERSION_TEMP, w
     andlw d'00001111'
     banksel VALOR_CONVERSIONL
     movwf VALOR_CONVERSIONL
-
+    
+    ; Mapeo y envío los valores por el puerto usart.
     banksel VALOR_CONVERSIONL
     movf VALOR_CONVERSIONL, w
     call mapear_enviar
@@ -249,17 +280,7 @@ enviar_conversion_usart
     
     return ; enviar_conversion_usart
 	
-rutina_letra_A
-	call guardar_contexto_case
-	
-	banksel VALOR_CONVERSION
-	movf VALOR_CONVERSION, w
-	call enviar_conversion_usart
-	
-	call cargar_contexto_case
-	return ; rutina_letra_A
-	
-; Mapea el valor de w a un caracter ASCII y lo envÃ­a por el puerto USART.
+; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
 mapear_enviar 
     call mapear    
     call enviar_w
@@ -268,22 +289,22 @@ mapear_enviar
 ; Envia el valor del registro w por el puerto USART.
 enviar_w
     banksel PIR1
-    btfss PIR1, TXIF ; Esta vacÃ­o el bus de transmisiÃ³n?
-    goto $-1 ; No, vuelvo a chequear hasta que estÃ© libre.
+    btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
+    goto $-1 ; No, vuelvo a chequear hasta que esté libre.
     banksel TXREG
     movwf TXREG 
     return ; enviar_w
 	
 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
 mapear
-	banksel TEMP_W
-	movwf TEMP_W
-	sublw b'00001001' ; 0x09 -> 9 decimal
-	btfsc STATUS, Z
-	goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
-	btfsc STATUS, C
-	goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
-	goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
+    banksel TEMP_W
+    movwf TEMP_W
+    sublw b'00001001' ; 0x09 -> 9 decimal
+    btfsc STATUS, Z
+    goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
+    btfsc STATUS, C
+    goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+    goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
 
 ; Sumo 30h al valor que tengo en w.
 sumar_30
@@ -301,34 +322,34 @@ sumar_37
 	
 ; Inicializa la memoria EEPROM.
 inicializar_eeprom
-	; Inicializo la flag de memoria inicializada.
-	; Cargo 0x30 (Puntero flag del buffer)
-	movlw 0x30
-	banksel EEADR
-	movwf EEADR
-	; Cargo el dato que indica que estÃ¡ inicializada la memoria.
-	movlw 0x77
-	banksel EEDAT
-	movwf EEDAT
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	; Inicializo el puntero inicial del donde arranca el buffer.
-	; Cargo 0x31 (SIGUIENTE_PUNTERO)
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Cargo el dato que indica que estÃ¡ inicializada la memoria.
-	movlw 0x40
-	banksel EEDAT
-	movwf EEDAT
-	; Guardo el valor de w en memoria.
-	call guardar_memoria
-	
-	return ; inicializar_eeprom
+    ; Inicializo la flag de memoria inicializada.
+    ; Cargo 0x30 (Puntero flag del buffer)
+    movlw 0x30
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que está¡ inicializada la memoria.
+    movlw 0x77
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    ; Inicializo el puntero inicial del donde arranca el buffer.
+    ; Cargo 0x31 (SIGUIENTE_PUNTERO)
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que está, inicializada la memoria.
+    movlw 0x49
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; inicializar_eeprom
 
 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
-guardar_memoria_VALOR_CONTADOR
+guardar_memoria_VALOR_CONVERSION
 	; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
 	call obtener_siguiente_puntero
 	; Cargo el dato de VALOR_CONVERSION en EEDAT.
@@ -344,111 +365,111 @@ guardar_memoria_VALOR_CONTADOR
 	; Guardo el valor de w en memoria.
 	call guardar_memoria
 	
-	return ; guardar_memoria_VALOR_CONTADOR
+	return ; guardar_memoria_VALOR_CONVERSION
 
 ; Obtiene y guarda el siguiente puntero del buffer en memoria.	
 obtener_siguiente_puntero
-	; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Cargo el valor de memoria en w.
-	call leer_memoria
-	
-	; Sumo 1 al puntero.
-	addlw d'1'
-	banksel SIGUIENTE_PUNTERO
-	movwf SIGUIENTE_PUNTERO
-	
-	; Chequeo que no me pase del buffer.
-	sublw 0x49
-	; INICIO IF
-		btfsc STATUS, C
-		; w <= 0x49 THEN
-		goto $+3
-		; ELSE
-		movlw 0x40
-		movwf SIGUIENTE_PUNTERO
-	; FIN IF
-	
-	; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
-	movf SIGUIENTE_PUNTERO, w
-	banksel EEDAT
-	movwf EEDAT
-	; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-	movlw 0x31
-	banksel EEADR
-	movwf EEADR
-	; Guardo el valor de w en memoria.
-	call guardar_memoria	
-	
-	return ; obtener_siguiente_puntero
+    ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el valor de memoria en w.
+    call leer_memoria
+
+    ; Sumo 1 al puntero.
+    addlw d'1'
+    banksel SIGUIENTE_PUNTERO
+    movwf SIGUIENTE_PUNTERO
+
+    ; Chequeo que no me pase del buffer.
+    sublw 0x49
+    ; INICIO IF
+	    btfsc STATUS, C
+	    ; w <= 0x49 THEN
+	    goto $+3
+	    ; ELSE
+	    movlw 0x40
+	    movwf SIGUIENTE_PUNTERO
+    ; FIN IF
+
+    ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria	
+
+    return ; obtener_siguiente_puntero
 
 ; Leo un valor ya seteado en EEADR de memoria en w.
 leer_memoria
-	banksel EEADR
-	movwf EEADR ; Cargo la direcciÃ³n.
-	
-	banksel EECON1
-	bcf EECON1, EEPGD ; Apunto a la EEPROM
-	bsf EECON1, RD ; Activo la lectura.
-	banksel EEDAT
-	movf EEDAT, w ; Guardo el valor en w.
-	
-	return ; leer_memoria
+    banksel EEADR
+    movwf EEADR ; Cargo la dirección.
+
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, RD ; Activo la lectura.
+    banksel EEDAT
+    movf EEDAT, w ; Guardo el valor en w.
+
+    return ; leer_memoria
 
 guardar_memoria
-	banksel EECON1
-	bcf EECON1, EEPGD ; Apunto a la EEPROM
-	bsf EECON1, WREN ; Activo la escritura.
-	
-	bcf INTCON, GIE ; Desactivo interrupciones.
-	btfsc INTCON, GIE
-	goto $-2
-	
-	; SECCION INTOCABLE
-	movlw 0x55
-	movwf EECON2
-	movlw 0xAA
-	movwf EECON2
-	bsf EECON1, WR ; Se comienza la escritura.
-	; FIN SECCION INTOCABLE
-	
-	bsf INTCON, GIE ; Activo las interrupciones.	
-	return ; guardar_memoria
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, WREN ; Activo la escritura.
+
+    bcf INTCON, GIE ; Desactivo interrupciones.
+    btfsc INTCON, GIE
+    goto $-2
+
+    ; SECCION INTOCABLE
+    movlw 0x55
+    movwf EECON2
+    movlw 0xAA
+    movwf EECON2
+    bsf EECON1, WR ; Se comienza la escritura.
+    ; FIN SECCION INTOCABLE
+
+    bsf INTCON, GIE ; Activo las interrupciones.	
+    return ; guardar_memoria
 	
 ; Configurar CONTADOR_TIMER1
 re_iniciar_contador1
-	banksel CONTADOR_TIMER1
-	movlw d'10'
-	movwf CONTADOR_TIMER1
-	
-	return ; re_iniciar_contador1
+    banksel CONTADOR_TIMER1
+    movlw d'10'
+    movwf CONTADOR_TIMER1
 
-; Rutina de interrupciÃ³n del tmr1.
+    return ; re_iniciar_contador1
+
+; Rutina de interrupción del tmr1.
 interrupt_tmr1
-	; Decremento el contador.
-	banksel CONTADOR_TIMER1
-	; INICIO IF
-		decfsz CONTADOR_TIMER1, f
-		; CONTADOR_TIMER <> 0 THEN
-		goto $+3
-		; ELSE
-		call guardar_memoria_VALOR_CONTADOR
-		call re_iniciar_contador1
-	; FIN IF
-	call re_iniciar_timer1
-	
-	return ; interrupt_tmr1
+    ; Decremento el contador.
+    banksel CONTADOR_TIMER1
+    ; INICIO IF
+	    decfsz CONTADOR_TIMER1, f
+	    ; CONTADOR_TIMER <> 0 THEN
+	    goto $+3
+	    ; ELSE
+	    call guardar_memoria_VALOR_CONVERSION
+	    call re_iniciar_contador1
+    ; FIN IF
+    call re_iniciar_timer1
+
+    return ; interrupt_tmr1
 
 ; Interrupcion de escritura de la eepron.
 interrupt_eeprom
-	banksel PIR2
-	bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
-	
-	return ; interrupt_eeprom
+    banksel PIR2
+    bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
 
-; Inicia el timer con el valor precargado, para una interrupciÃ³n cada 100 ms.
+    return ; interrupt_eeprom
+
+; Inicia el timer con el valor precargado, para una interrupción cada 100 ms.
 re_iniciar_timer1
 ;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
     ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
@@ -471,7 +492,7 @@ realizar_conversion
     btfsc ADCON0, GO ; Is conversion done?
     goto $-1 ; No, test again
 	
-	; Obtener el valor de la conversiÃ³n.
+    ; Obtener el valor de la conversión.
     banksel ADRESH
     movf ADRESH, w
     banksel VALOR_CONVERSION

@@ -1,4 +1,4 @@
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  1
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -29,7 +29,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 2008   3EFF           00012  __CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
                       00013 
                       00014 ; Organizacion de la memoria EEPROM.
-                      00015 ; 0x30 -> Flag que indica si estÃ¡ usado el buffer o no.
+                      00015 ; 0x30 -> Flag que indica si está¡ usado el buffer o no.
                       00016 ; 0x31 -> Puntero actual del buffer.
                       00017 ; 0x40 - 0x49 -> Buffer.
                       00018     
@@ -42,358 +42,620 @@ Warning[205]: Found directive in column 1. (cblock)
   00000022            00024     CONTADOR_1 ; 0x22
   00000023            00025     CONTADOR_2 ; 0x23
   00000024            00026     CONTADOR_3 ;0x24
-  00000025            00027     VALOR_CONVERSION  ; 0x25
-  00000026            00028     CONTADOR_TIMER1 ; 0x26
-  00000027            00029     SIGUIENTE_PUNTERO ; 0X27
-                      00030 
-Warning[205]: Found directive in column 1. (ENDC)
-                      00031 endc
-                      00032    
-                      00033 ;Organizacion de la memoria de programacion
-Warning[205]: Found directive in column 1. (org)
-                      00034 org 0x0000
-Warning[203]: Found opcode in column 1. (goto)
-0000   2???           00035 goto main
-                      00036 
-Warning[205]: Found directive in column 1. (org)
-                      00037 org 0x0004
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  2
-
-
-LOC  OBJECT CODE     LINE SOURCE TEXT
-  VALUE
-
-Warning[203]: Found opcode in column 1. (goto)
-0004   2???           00038 goto interrupt
+  00000025            00027     VALOR_CONVERSION_TEMP ; 0x25
+  00000026            00028     VALOR_CONVERSION ; 0x26
+  00000027            00029     VALOR_CONVERSIONH ; 0x27
+  00000028            00030     VALOR_CONVERSIONL ; 0x28
+  00000029            00031     VALOR_CONVERSION_MEMORIA ; 0x29
+  0000002A            00032     CONTADOR_TIMER1 ; 0x30
+  0000002B            00033     SIGUIENTE_PUNTERO ; 0X31
+  0000002C            00034     PUNTERO_ACTUAL ; 0x32
+  0000002D            00035     TEMP_W ; 0x33
+  0000002E            00036     STATUS_TEMP_CASE ; 0x34
+  0000002F            00037     W_TEMP_CASE ; 0x35
+  00000030            00038     ITERADOR ; 0x36
                       00039 
-                      00040 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00041         
-0005                  00042 main
-0005   2???           00043     call configuracion_inicial
-                      00044     
-0006                  00045 mainloop
-0006   2???           00046     call realizar_conversion
-0007   2???           00047     goto mainloop
-                      00048         
-                      00049 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00050 
-0008                  00051 interrupt
-0008   2???           00052         call guardar_contexto
-                      00053         
-                      00054         ; Identifico la interrupcion.
-0009   1283 1303      00055         banksel PIR1
-000B   180C           00056         btfsc PIR1, TMR1IF ; Interrupcion timer1?
-000C   2???           00057         call interrupt_tmr1
-                      00058         
-000D   1283 1303      00059         banksel PIR2
-000F   1A0D           00060         btfsc PIR2, EEIF; Interrupcion escritura?
-0010   2???           00061         call interrupt_eeprom
+Warning[205]: Found directive in column 1. (ENDC)
+                      00040 endc
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00041    
+                      00042 ;Organizacion de la memoria de programacion
+Warning[205]: Found directive in column 1. (org)
+                      00043 org 0x0000
+Warning[203]: Found opcode in column 1. (goto)
+0000   2???           00044 goto main
+                      00045 
+Warning[205]: Found directive in column 1. (org)
+                      00046 org 0x0004
+Warning[203]: Found opcode in column 1. (goto)
+0004   2???           00047 goto interrupt
+                      00048 
+                      00049 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00050         
+0005                  00051 main
+0005   2???           00052     call configuracion_inicial
+                      00053     
+0006                  00054 mainloop
+0006   2???           00055     call realizar_conversion
+0007   2???           00056     goto mainloop
+                      00057         
+                      00058 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00059 
+0008                  00060 interrupt
+0008   2???           00061     call guardar_contexto
                       00062 
-0011   2???           00063         call cargar_contexto
-0012   0009           00064         retfie ; interrupt
-                      00065         
-                      00066 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00063     ; Identifico la interrupcion.
+0009   1283 1303      00064     banksel PIR1
+000B   180C           00065     btfsc PIR1, TMR1IF ; Interrupcion timer1?
+000C   2???           00066     call interrupt_tmr1
                       00067 
-0013                  00068 configuracion_inicial   
-                      00069         ; Configuro las entradas de voltaje analogicas (PUERTOA).
-0013   1683 1303      00070         banksel TRISA
+000D   1283 1303      00068     banksel PIR1
+000F   1A8C           00069     btfsc PIR1, RCIF ; Interrupcion usart?
+0010   2???           00070     call interrupt_usart
+                      00071 
+0011   1283 1303      00072     banksel PIR2
+0013   1A0D           00073     btfsc PIR2, EEIF; Interrupcion escritura?
+0014   2???           00074     call interrupt_eeprom
+                      00075 
+0015   2???           00076     call cargar_contexto
+0016   0009           00077     retfie ; interrupt
+                      00078         
+                      00079 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00080 
+0017                  00081 configuracion_inicial   
+                      00082     ; Configuro las entradas de voltaje analogicas (PUERTOA).
+0017   1683 1303      00083     banksel TRISA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0015   1405           00071         bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
+0019   1405           00084     bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0016   1485           00072         bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analÃ³gica)
-0017   1683 1703      00073         banksel ANSEL
+001A   1485           00085     bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analógica)
+001B   1683 1703      00086     banksel ANSEL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0019   1408           00074         bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001A   1488           00075         bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
-                      00076         
-                      00077         ; Configuracion de la conversiÃ³n analÃ³gica.
-001B   1683 1303      00078         banksel ADCON1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001D   019F           00079         clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd 
-                      00080         ; ConfiguraciÃ³n del reloj y encendido del conversor analogico.
-001E   1283 1303      00081         banksel ADCON0 
-0020   3081           00082         movlw b'10000001'
-0021   009F           00083         movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
-                      00084         
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  3
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00085         ; Configuro las interrupciones.
-0022   178B           00086         bsf INTCON, GIE ; Global interrupt enable bit.
-0023   170B           00087     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
-                      00088         
-                      00089         ; Chequeo inicial de la memoria EEPROM.
-0024   3030           00090         movlw 0x30
-0025   2???           00091         call leer_memoria
-0026   3C77           00092         sublw 0x77
-0027   1D03           00093         btfss STATUS, Z
-0028   2???           00094         goto $+2
-0029   2???           00095         call inicializar_eeprom
-                      00096         
-                      00097         ; Configuro el timer1.
-002A   1683 1303      00098         banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
+001D   1408           00087     bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002C   140C           00099     bsf PIE1, TMR1IE    
-002D   1283 1303      00100     banksel PIR1
-002F   100C           00101     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
-0030   1283 1303      00102     banksel T1CON
-0032   1090           00103     bcf T1CON, TMR1CS ; Timer1 Clock Source Select bit = Clock
-                      00104     ; Configurar preescaler timer1(1:8)
-0033   1610           00105     bsf T1CON, T1CKPS0
-0034   1690           00106     bsf T1CON, T1CKPS1
-0035   1010           00107     bcf T1CON, TMR1ON ; Encender el timer.
-                      00108         ; Reinicio el contador tmr1.
-0036   2???           00109         call re_iniciar_contador1
-                      00110         ; Reinicio el timer1.
-0037   2???           00111     call re_iniciar_timer1
-                      00112         
-0038   0008           00113         return ; configurar_puertos
-                      00114 
-                      00115 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
-                      00116 
-                      00117 ; Inicializa la memoria EEPROM.
-0039                  00118 inicializar_eeprom
-                      00119         ; Inicializo la flag de memoria inicializada.
-                      00120         ; Cargo 0x30 (Puntero flag del buffer)
-0039   3030           00121         movlw 0x30
-003A   1283 1703      00122         banksel EEADR
+001E   1488           00088     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
+                      00089 
+                      00090     ; Configuracion de la conversión analógica.
+001F   1683 1303      00091     banksel ADCON1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003C   008D           00123         movwf EEADR
-                      00124         ; Cargo el dato que indica que estÃ¡ inicializada la memoria.
-003D   3077           00125         movlw 0x77
-003E   1283 1703      00126         banksel EEDAT
+0021   019F           00092     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd     
+                      00093     ; Configuración del reloj y encendido del conversor analogico.
+0022   1283 1303      00094     banksel ADCON0 
+0024   3081           00095     movlw b'10000001'
+0025   009F           00096     movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
+                      00097 
+                      00098     ; Configuro las interrupciones.
+0026   178B           00099     bsf INTCON, GIE ; Global interrupt enable bit.
+0027   170B           00100     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
+                      00101         
+                      00102     ; Configuracion puerto serie (EUSART)
+                      00103     ; Configuracion baudrate
+0028   1683 1303      00104     banksel TXSTA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0040   008C           00127         movwf EEDAT
-                      00128         ; Guardo el valor de w en memoria.
-0041   2???           00129         call guardar_memoria
-                      00130         
-                      00131         ; Inicializo el puntero inicial del donde arranca el buffer.
-                      00132         ; Cargo 0x31 (SIGUIENTE_PUNTERO)
-0042   3031           00133         movlw 0x31
-0043   1283 1703      00134         banksel EEADR
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  4
+002A   1518           00105     bsf TXSTA, BRGH ; BRGH = High Speed
+002B   1683 1703      00106     banksel BAUDCTL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002D   1187           00107     bcf BAUDCTL, BRG16 ; BRG16 = 8-bit Baud Rate Generator is used.
+002E   1683 1303      00108     banksel SPBRGH
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0030   019A           00109     clrf SPBRGH
+0031   1683 1303      00110     banksel SPBRG
+0033   3081           00111     movlw d'129'        
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0034   0099           00112     movwf SPBRG ; Baudrate 9600
+                      00113     ; Configuro la transmision.
+0035   1683 1303      00114     banksel TXSTA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0037   1698           00115     bsf TXSTA, TXEN  ; Transmit Enable bit = Transmit enabled
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0038   1218           00116     bcf TXSTA, SYNC  ; EUSART mode select bit = Asynchronous mode
+                      00117     ; Configuro la recepcion.
+0039   1283 1303      00118     banksel RCSTA
+003B   1618           00119     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
+003C   1798           00120     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
+003D   1683 1303      00121     banksel PIE1 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+003F   168C           00122     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
+                      00123 
+                      00124     ; Chequeo inicial de la memoria EEPROM.
+0040   3030           00125     movlw 0x30
+0041   2???           00126     call leer_memoria
+                      00127     ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
+                      00128     ; valor significa que la memoria está inicializada, sino hay que
+                      00129     ; inicializarla.
+0042   3C77           00130     sublw 0x77
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+                      00131     ; INICIO IF
+0043   1D03           00132         btfss STATUS, Z
+                      00133         ; 0x30 tiene 0x77
+0044   2???           00134         goto $+2
+                      00135         ; 0x30 no tiene 0x77
+0045   2???           00136         call inicializar_eeprom
+                      00137     ; FIN IF
+                      00138         
+                      00139     ; Configuro el timer1.
+0046   1683 1303      00140     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0045   008D           00135         movwf EEADR
-                      00136         ; Cargo el dato que indica que estÃ¡ inicializada la memoria.
-0046   3040           00137         movlw 0x40
-0047   1283 1703      00138         banksel EEDAT
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0049   008C           00139         movwf EEDAT
-                      00140         ; Guardo el valor de w en memoria.
-004A   2???           00141         call guardar_memoria
-                      00142         
-004B   0008           00143         return ; inicializar_eeprom
-                      00144 
-                      00145 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
-004C                  00146 guardar_memoria_VALOR_CONTADOR
-                      00147         ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
-004C   2???           00148         call obtener_siguiente_puntero
-                      00149         ; Cargo el dato de VALOR_CONVERSION en EEDAT.
-004D   1283 1303      00150         banksel VALOR_CONVERSION
-004F   0825           00151         movf VALOR_CONVERSION, w
-0050   1283 1703      00152         banksel EEDAT
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0052   008C           00153         movwf EEDAT
-                      00154         ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-0053   1283 1303      00155         banksel SIGUIENTE_PUNTERO
-0055   0827           00156         movf SIGUIENTE_PUNTERO, w
-0056   1283 1703      00157         banksel EEADR
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0058   008D           00158         movwf EEADR
-                      00159         ; Guardo el valor de w en memoria.
-0059   2???           00160         call guardar_memoria
-                      00161         
-005A   0008           00162         return ; guardar_memoria_VALOR_CONTADOR
-                      00163 
-                      00164 ; Obtiene y guarda el siguiente puntero del buffer en memoria.  
-005B                  00165 obtener_siguiente_puntero
-                      00166         ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
-005B   3031           00167         movlw 0x31
-005C   1283 1703      00168         banksel EEADR
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-005E   008D           00169         movwf EEADR
-                      00170         ; Cargo el valor de memoria en w.
-005F   2???           00171         call leer_memoria
-                      00172         
-                      00173         ; Sumo 1 al puntero.
-0060   3E01           00174         addlw d'1'
-0061   1283 1303      00175         banksel SIGUIENTE_PUNTERO
-0063   00A7           00176         movwf SIGUIENTE_PUNTERO
-                      00177         
-                      00178         ; Chequeo que no me pase del buffer.
-0064   3C49           00179         sublw 0x49
-                      00180         ; INICIO IF
-0065   1803           00181                 btfsc STATUS, C
-                      00182                 ; w <= 0x49 THEN
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  5
+0048   140C           00141     bsf PIE1, TMR1IE    
+0049   1283 1303      00142     banksel PIR1
+004B   100C           00143     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+004C   1283 1303      00144     banksel T1CON
+004E   1090           00145     bcf T1CON, TMR1CS ; Timer1 Clock Source Select bit = Clock
+                      00146     ; Configurar preescaler timer1(1:8)
+004F   1610           00147     bsf T1CON, T1CKPS0
+0050   1690           00148     bsf T1CON, T1CKPS1
+0051   1010           00149     bcf T1CON, TMR1ON ; Encender el timer.
+                      00150     ; Reinicio el contador tmr1.
+0052   2???           00151     call re_iniciar_contador1
+                      00152     ; Reinicio el timer1.
+0053   2???           00153     call re_iniciar_timer1
+                      00154         
+0054   0008           00155     return ; configurar_puertos
+                      00156 
+                      00157 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
+                      00158 
+                      00159 ; Lee el contenido del puerto y dervia en un case que indica que letra se
+                      00160 ; ingresó.
+0055                  00161 interrupt_usart
+0055   1283 1303      00162     banksel RCREG
+0057   081A           00163     movf RCREG, w
+0058   2???           00164     call case_letras
+0059   0008           00165     return ; interrupt_usart
+                      00166         
+                      00167 ; Identifica que letra se leyó en el puerto USART.      
+005A                  00168 case_letras
+005A   3A41           00169     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
+005B   1903           00170     btfsc STATUS, Z
+005C   2???           00171     call rutina_letra_A
+                      00172  
+005D   3A09           00173     xorlw b'01001000' ^ b'01000001' ; 0x48 = 'H' (ASCII)
+005E   1903           00174     btfsc STATUS, Z               
+005F   2???           00175     call rutina_letra_H
+                      00176         
+0060   0008           00177     return ; case_letras
+                      00178 
+                      00179 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
+                      00180 ; el puerto usart.
+0061                  00181 rutina_letra_A
+0061   2???           00182     call guardar_contexto_case
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0066   2???           00183                 goto $+3
-                      00184                 ; ELSE
-0067   3040           00185                 movlw 0x40
-0068   00A7           00186                 movwf SIGUIENTE_PUNTERO
-                      00187         ; FIN IF
-                      00188         
-                      00189         ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
-0069   0827           00190         movf SIGUIENTE_PUNTERO, w
-006A   1283 1703      00191         banksel EEDAT
+                      00183 
+0062   1283 1303      00184     banksel VALOR_CONVERSION
+0064   0826           00185     movf VALOR_CONVERSION, w
+0065   2???           00186     call enviar_conversion_usart
+                      00187 
+0066   2???           00188     call cargar_contexto_case
+0067   0008           00189     return ; rutina_letra_A
+                      00190     
+                      00191 ; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
+                      00192 ; envía por el puerto usart.
+0068                  00193 rutina_letra_H
+0068   2???           00194     call guardar_contexto_case
+                      00195     
+                      00196     ; Leo el puntero del buffer actual.
+0069   3031           00197     movlw 0x31
+006A   2???           00198     call leer_memoria
+                      00199     
+                      00200     ; Guardo el valor del puntero actual.
+006B   1283 1303      00201     banksel PUNTERO_ACTUAL
+006D   00AC           00202     movwf PUNTERO_ACTUAL
+                      00203     
+                      00204     ; Guardo el valor inicial de ITERADOR.
+006E   1283 1303      00205     banksel ITERADOR
+0070   00B0           00206     movwf ITERADOR
+                      00207 
+Warning[207]: Found label after column 1. (WhileLoopInicio)
+0071                  00208     WhileLoopInicio
+                      00209         ; Obtengo el dato que apunta ITERADOR.
+0071   1283 1303      00210         banksel ITERADOR
+0073   0830           00211         movf ITERADOR, w
+0074   1283 1703      00212         banksel EEADR
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-006C   008C           00192         movwf EEDAT
-                      00193         ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
-006D   3031           00194         movlw 0x31
-006E   1283 1703      00195         banksel EEADR
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0070   008D           00196         movwf EEADR
-                      00197         ; Guardo el valor de w en memoria.
-0071   2???           00198         call guardar_memoria    
-                      00199         
-0072   0008           00200         return ; obtener_siguiente_puntero
-                      00201 
-                      00202 ; Leo un valor ya seteado en EEADR de memoria en w.
-0073                  00203 leer_memoria
-0073   1283 1703      00204         banksel EEADR
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0075   008D           00205         movwf EEADR ; Cargo la direcciÃ³n.
-                      00206         
-0076   1683 1703      00207         banksel EECON1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0078   138C           00208         bcf EECON1, EEPGD ; Apunto a la EEPROM
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0079   140C           00209         bsf EECON1, RD ; Activo la lectura.
-007A   1283 1703      00210         banksel EEDAT
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-007C   080C           00211         movf EEDAT, w ; Guardo el valor en w.
-                      00212         
-007D   0008           00213         return ; leer_memoria
-                      00214 
-007E                  00215 guardar_memoria
-007E   1683 1703      00216         banksel EECON1
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0080   138C           00217         bcf EECON1, EEPGD ; Apunto a la EEPROM
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0081   150C           00218         bsf EECON1, WREN ; Activo la escritura.
-                      00219         
-0082   138B           00220         bcf INTCON, GIE ; Desactivo interrupciones.
-0083   1B8B           00221         btfsc INTCON, GIE
-0084   2???           00222         goto $-2
-                      00223         
-                      00224         ; SECCION INTOCABLE
-0085   3055           00225         movlw 0x55
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0086   008D           00226         movwf EECON2
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  6
+0076   008D           00213         movwf EEADR
+0077   2???           00214         call leer_memoria
+                      00215         
+                      00216         ; Envío el dato (contenido en w) por el puerto usart.
+0078   2???           00217         call enviar_conversion_usart
+                      00218         ; Envío un salto de linea.
+0079   300A           00219         movlw d'10'
+007A   2???           00220         call enviar_w
+                      00221         
+                      00222         ; Incremento ITERADOR.
+007B   1283 1303      00223         banksel ITERADOR
+007D   0AB0           00224         incf ITERADOR, f
+                      00225         ; Chequeo que no me pase el buffer.
+007E   0830           00226         movf ITERADOR, w
+007F   3C49           00227         sublw 0x49
+                      00228         ; INICIO IF
+0080   1803           00229             btfsc STATUS, C
+                      00230             ; w <= 0x49 THEN
+0081   2???           00231             goto $+3
+                      00232             ; ELSE (ITERADOR > 0x49)
+0082   3040           00233             movlw 0x40
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0087   30AA           00227         movlw 0xAA
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0088   008D           00228         movwf EECON2
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0089   148C           00229         bsf EECON1, WR ; Se comienza la escritura.
-                      00230         ; FIN SECCION INTOCABLE
-                      00231         
-008A   178B           00232         bsf INTCON, GIE ; Activo las interrupciones.    
-008B   0008           00233         return ; guardar_memoria
-                      00234         
-                      00235 ; Configurar CONTADOR_TIMER1
-008C                  00236 re_iniciar_contador1
-008C   1283 1303      00237         banksel CONTADOR_TIMER1
-008E   300A           00238         movlw d'10'
-008F   00A6           00239         movwf CONTADOR_TIMER1
-                      00240         
-0090   0008           00241         return ; re_iniciar_contador1
-                      00242 
-                      00243 ; Rutina de interrupciÃ³n del tmr1.
-0091                  00244 interrupt_tmr1
-                      00245         ; Decremento el contador.
-0091   1283 1303      00246         banksel CONTADOR_TIMER1
-                      00247         ; INICIO IF
-0093   0BA6           00248                 decfsz CONTADOR_TIMER1, f
-                      00249                 ; CONTADOR_TIMER <> 0 THEN
-0094   2???           00250                 goto $+3
-                      00251                 ; ELSE
-0095   2???           00252                 call guardar_memoria_VALOR_CONTADOR
-0096   2???           00253                 call re_iniciar_contador1
-                      00254         ; FIN IF
-0097   2???           00255         call re_iniciar_timer1
-                      00256         
-0098   0008           00257         return ; interrupt_tmr1
+0083   00B0           00234             movwf ITERADOR
+                      00235         ; FIN IF
+                      00236         
+                      00237         ; Compruebo que no llegue al PUNTERO_ACTUAL (fin del loop)      
+0084   1283 1303      00238         banksel PUNTERO_ACTUAL
+0086   082C           00239         movf PUNTERO_ACTUAL, w
+0087   1283 1303      00240         banksel ITERADOR
+0089   0230           00241         subwf ITERADOR, w
+                      00242         ; INICIO IF
+008A   1D03           00243             btfss STATUS, Z
+                      00244             ; THEN (ITERADOR = PUNTERO_ACTUAL)
+008B   2???           00245             goto $+2
+                      00246             ; ELSE
+008C   2???           00247             goto WhileLoopInicio
+                      00248         ; FIN IF        
+008D   2???           00249     call cargar_contexto_case
+                      00250     
+008E   0008           00251     return ; rutina_letra_H
+                      00252         
+                      00253 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
+                      00254 ; usart.
+008F                  00255 enviar_conversion_usart 
+008F   1283 1303      00256     banksel VALOR_CONVERSION_TEMP
+0091   00A5           00257     movwf VALOR_CONVERSION_TEMP
                       00258 
-                      00259 ; Interrupcion de escritura de la eepron.
-0099                  00260 interrupt_eeprom
-0099   1283 1303      00261         banksel PIR2
-009B   120D           00262         bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
-                      00263         
-009C   0008           00264         return ; interrupt_eeprom
-                      00265 
-                      00266 ; Inicia el timer con el valor precargado, para una interrupciÃ³n cada 100 ms.
-009D                  00267 re_iniciar_timer1
-                      00268 ;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
-                      00269     ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
-                      00270     ; Formula para 100 ms: ValorTimer = 65536 - ((100ms * 20Mhz) / (8 * 4)) = 3036
-                      00271 
-                      00272     ; Cargar 3036 (00001011 11011100)
-009D   1283 1303      00273     banksel PIR1
-                      00274     
-009F   30DC           00275     movlw b'11011100' 
-00A0   008E           00276     movwf  TMR1L
-00A1   300B           00277     movlw b'00001011' 
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  7
+                      00259     ; Obtengo los valores High y Low de la conversion.
+Warning[202]: Argument out of range.  Least significant bits used.
+0092   3970           00260     andlw d'11110000'
+0093   1283 1303      00261     banksel VALOR_CONVERSIONH
+0095   00A7           00262     movwf VALOR_CONVERSIONH
+0096   0EA7           00263     swapf VALOR_CONVERSIONH, f  ; Hago swamp para cambiar de lugar y 
+                      00264                                 ; tener todos en los bits menos significativos.
+                      00265     
+0097   1283 1303      00266     banksel VALOR_CONVERSION_TEMP
+0099   0825           00267     movf VALOR_CONVERSION_TEMP, w
+Warning[202]: Argument out of range.  Least significant bits used.
+009A   3957           00268     andlw d'00001111'
+009B   1283 1303      00269     banksel VALOR_CONVERSIONL
+009D   00A8           00270     movwf VALOR_CONVERSIONL
+                      00271     
+                      00272     ; Mapeo y envío los valores por el puerto usart.
+009E   1283 1303      00273     banksel VALOR_CONVERSIONL
+00A0   0828           00274     movf VALOR_CONVERSIONL, w
+00A1   2???           00275     call mapear_enviar
+                      00276         
+00A2   1283 1303      00277     banksel VALOR_CONVERSIONH
+00A4   0827           00278     movf VALOR_CONVERSIONH, w
+00A5   2???           00279     call mapear_enviar
+                      00280     
+00A6   0008           00281     return ; enviar_conversion_usart
+                      00282         
+                      00283 ; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
+00A7                  00284 mapear_enviar 
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00A2   008F           00278     movwf  TMR1H
-                      00279     
-00A3   100C           00280     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
-00A4   0008           00281     return ; re_iniciar_timer1
-                      00282 
-                      00283 ; Realiza la conversion y almacena los valores en variables.
-00A5                  00284 realizar_conversion
-00A5   149F           00285     bsf ADCON0, GO ; Start conversion
-00A6   189F           00286     btfsc ADCON0, GO ; Is conversion done?
-00A7   2???           00287     goto $-1 ; No, test again
-                      00288     
-                      00289     ; Obtener el valor de la conversiÃ³n.
-00A8   1283 1303      00290     banksel ADRESH
-00AA   081E           00291     movf ADRESH, W
-00AB   1283 1303      00292     banksel VALOR_CONVERSION
-00AD   00A5           00293     movwf VALOR_CONVERSION
-                      00294     
-00AE   0008           00295     return ; realizar_conversion
-                      00296 
-                      00297 ; Rutinas de contexto.
-00AF                  00298 guardar_contexto
-00AF   00A0           00299         movwf W_TEMP  ; Guardo w.
-00B0   0E03           00300         swapf STATUS, w ; Swap status en w.
-00B1   00A1           00301         movwf STATUS_TEMP ; Guardo STATUS.
-00B2   0008           00302         return ; guardar_contexto
-                      00303         
-00B3                  00304 cargar_contexto
-00B3   0E21           00305         swapf STATUS_TEMP, w
-00B4   0083           00306         movwf STATUS
-00B5   0EA0           00307         swapf W_TEMP, f
-00B6   0E20           00308         swapf W_TEMP, w
-00B7   0008           00309         return ; cargar_contexto
-                      00310         
+00A7   2???           00285     call mapear    
+00A8   2???           00286     call enviar_w
+00A9   0008           00287     return ; mapear_enviar
+                      00288         
+                      00289 ; Envia el valor del registro w por el puerto USART.
+00AA                  00290 enviar_w
+00AA   1283 1303      00291     banksel PIR1
+00AC   1E0C           00292     btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
+00AD   2???           00293     goto $-1 ; No, vuelvo a chequear hasta que esté libre.
+00AE   1283 1303      00294     banksel TXREG
+00B0   0099           00295     movwf TXREG 
+00B1   0008           00296     return ; enviar_w
+                      00297         
+                      00298 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
+00B2                  00299 mapear
+00B2   1283 1303      00300     banksel TEMP_W
+00B4   00AD           00301     movwf TEMP_W
+00B5   3C09           00302     sublw b'00001001' ; 0x09 -> 9 decimal
+00B6   1903           00303     btfsc STATUS, Z
+00B7   2???           00304     goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
+00B8   1803           00305     btfsc STATUS, C
+00B9   2???           00306     goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+00BA   2???           00307     goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
+                      00308 
+                      00309 ; Sumo 30h al valor que tengo en w.
+00BB                  00310 sumar_30
+00BB   1283 1303      00311         banksel TEMP_W
+00BD   082D           00312         movf TEMP_W, w
+00BE   3E30           00313         addlw b'00110000' ; 0x30 -> 48 decimal
+00BF   0008           00314         return ; sumar_30
+                      00315 
+                      00316 ; Sumo 37h al valor que tengo en w.
+00C0                  00317 sumar_37
+00C0   1283 1303      00318         banksel TEMP_W
+00C2   082D           00319         movf TEMP_W, w
+00C3   3E37           00320         addlw b'00110111' ; 0x37 -> 55 decimal
+00C4   0008           00321         return ; sumar_37
+                      00322         
+                      00323 ; Inicializa la memoria EEPROM.
+00C5                  00324 inicializar_eeprom
+                      00325     ; Inicializo la flag de memoria inicializada.
+                      00326     ; Cargo 0x30 (Puntero flag del buffer)
+00C5   3030           00327     movlw 0x30
+00C6   1283 1703      00328     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00C8   008D           00329     movwf EEADR
+                      00330     ; Cargo el dato que indica que está¡ inicializada la memoria.
+00C9   3077           00331     movlw 0x77
+00CA   1283 1703      00332     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00CC   008C           00333     movwf EEDAT
+                      00334     ; Guardo el valor de w en memoria.
+00CD   2???           00335     call guardar_memoria
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00336 
+                      00337     ; Inicializo el puntero inicial del donde arranca el buffer.
+                      00338     ; Cargo 0x31 (SIGUIENTE_PUNTERO)
+00CE   3031           00339     movlw 0x31
+00CF   1283 1703      00340     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00D1   008D           00341     movwf EEADR
+                      00342     ; Cargo el dato que indica que está, inicializada la memoria.
+00D2   3049           00343     movlw 0x49
+00D3   1283 1703      00344     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00D5   008C           00345     movwf EEDAT
+                      00346     ; Guardo el valor de w en memoria.
+00D6   2???           00347     call guardar_memoria
+                      00348 
+00D7   0008           00349     return ; inicializar_eeprom
+                      00350 
+                      00351 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
+00D8                  00352 guardar_memoria_VALOR_CONVERSION
+                      00353         ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
+00D8   2???           00354         call obtener_siguiente_puntero
+                      00355         ; Cargo el dato de VALOR_CONVERSION en EEDAT.
+00D9   1283 1303      00356         banksel VALOR_CONVERSION
+00DB   0826           00357         movf VALOR_CONVERSION, w
+00DC   1283 1703      00358         banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00DE   008C           00359         movwf EEDAT
+                      00360         ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+00DF   1283 1303      00361         banksel SIGUIENTE_PUNTERO
+00E1   082B           00362         movf SIGUIENTE_PUNTERO, w
+00E2   1283 1703      00363         banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00E4   008D           00364         movwf EEADR
+                      00365         ; Guardo el valor de w en memoria.
+00E5   2???           00366         call guardar_memoria
+                      00367         
+00E6   0008           00368         return ; guardar_memoria_VALOR_CONVERSION
+                      00369 
+                      00370 ; Obtiene y guarda el siguiente puntero del buffer en memoria.  
+00E7                  00371 obtener_siguiente_puntero
+                      00372     ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
+00E7   3031           00373     movlw 0x31
+00E8   1283 1703      00374     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00EA   008D           00375     movwf EEADR
+                      00376     ; Cargo el valor de memoria en w.
+00EB   2???           00377     call leer_memoria
+                      00378 
+                      00379     ; Sumo 1 al puntero.
+00EC   3E01           00380     addlw d'1'
+00ED   1283 1303      00381     banksel SIGUIENTE_PUNTERO
+00EF   00AB           00382     movwf SIGUIENTE_PUNTERO
+                      00383 
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00384     ; Chequeo que no me pase del buffer.
+00F0   3C49           00385     sublw 0x49
+                      00386     ; INICIO IF
+00F1   1803           00387             btfsc STATUS, C
+                      00388             ; w <= 0x49 THEN
+00F2   2???           00389             goto $+3
+                      00390             ; ELSE
+00F3   3040           00391             movlw 0x40
+00F4   00AB           00392             movwf SIGUIENTE_PUNTERO
+                      00393     ; FIN IF
+                      00394 
+                      00395     ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
+00F5   082B           00396     movf SIGUIENTE_PUNTERO, w
+00F6   1283 1703      00397     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00F8   008C           00398     movwf EEDAT
+                      00399     ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+00F9   3031           00400     movlw 0x31
+00FA   1283 1703      00401     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00FC   008D           00402     movwf EEADR
+                      00403     ; Guardo el valor de w en memoria.
+00FD   2???           00404     call guardar_memoria        
+                      00405 
+00FE   0008           00406     return ; obtener_siguiente_puntero
+                      00407 
+                      00408 ; Leo un valor ya seteado en EEADR de memoria en w.
+00FF                  00409 leer_memoria
+00FF   1283 1703      00410     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0101   008D           00411     movwf EEADR ; Cargo la dirección.
+                      00412 
+0102   1683 1703      00413     banksel EECON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0104   138C           00414     bcf EECON1, EEPGD ; Apunto a la EEPROM
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0105   140C           00415     bsf EECON1, RD ; Activo la lectura.
+0106   1283 1703      00416     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0108   080C           00417     movf EEDAT, w ; Guardo el valor en w.
+                      00418 
+0109   0008           00419     return ; leer_memoria
+                      00420 
+010A                  00421 guardar_memoria
+010A   1683 1703      00422     banksel EECON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010C   138C           00423     bcf EECON1, EEPGD ; Apunto a la EEPROM
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010D   150C           00424     bsf EECON1, WREN ; Activo la escritura.
+                      00425 
+010E   138B           00426     bcf INTCON, GIE ; Desactivo interrupciones.
+010F   1B8B           00427     btfsc INTCON, GIE
+0110   2???           00428     goto $-2
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00429 
+                      00430     ; SECCION INTOCABLE
+0111   3055           00431     movlw 0x55
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0112   008D           00432     movwf EECON2
+0113   30AA           00433     movlw 0xAA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0114   008D           00434     movwf EECON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0115   148C           00435     bsf EECON1, WR ; Se comienza la escritura.
+                      00436     ; FIN SECCION INTOCABLE
+                      00437 
+0116   178B           00438     bsf INTCON, GIE ; Activo las interrupciones.        
+0117   0008           00439     return ; guardar_memoria
+                      00440         
+                      00441 ; Configurar CONTADOR_TIMER1
+0118                  00442 re_iniciar_contador1
+0118   1283 1303      00443     banksel CONTADOR_TIMER1
+011A   300A           00444     movlw d'10'
+011B   00AA           00445     movwf CONTADOR_TIMER1
+                      00446 
+011C   0008           00447     return ; re_iniciar_contador1
+                      00448 
+                      00449 ; Rutina de interrupción del tmr1.
+011D                  00450 interrupt_tmr1
+                      00451     ; Decremento el contador.
+011D   1283 1303      00452     banksel CONTADOR_TIMER1
+                      00453     ; INICIO IF
+011F   0BAA           00454             decfsz CONTADOR_TIMER1, f
+                      00455             ; CONTADOR_TIMER <> 0 THEN
+0120   2???           00456             goto $+3
+                      00457             ; ELSE
+0121   2???           00458             call guardar_memoria_VALOR_CONVERSION
+0122   2???           00459             call re_iniciar_contador1
+                      00460     ; FIN IF
+0123   2???           00461     call re_iniciar_timer1
+                      00462 
+0124   0008           00463     return ; interrupt_tmr1
+                      00464 
+                      00465 ; Interrupcion de escritura de la eepron.
+0125                  00466 interrupt_eeprom
+0125   1283 1303      00467     banksel PIR2
+0127   120D           00468     bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
+                      00469 
+0128   0008           00470     return ; interrupt_eeprom
+                      00471 
+                      00472 ; Inicia el timer con el valor precargado, para una interrupción cada 100 ms.
+0129                  00473 re_iniciar_timer1
+                      00474 ;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
+                      00475     ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
+                      00476     ; Formula para 100 ms: ValorTimer = 65536 - ((100ms * 20Mhz) / (8 * 4)) = 3036
+                      00477 
+                      00478     ; Cargar 3036 (00001011 11011100)
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0129   1283 1303      00479     banksel PIR1
+                      00480     
+012B   30DC           00481     movlw b'11011100' 
+012C   008E           00482     movwf  TMR1L
+012D   300B           00483     movlw b'00001011' 
+012E   008F           00484     movwf  TMR1H
+                      00485     
+012F   100C           00486     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+0130   0008           00487     return ; re_iniciar_timer1
+                      00488 
+                      00489 ; Realiza la conversion y almacena los valores en variables.
+0131                  00490 realizar_conversion
+0131   149F           00491     bsf ADCON0, GO ; Start conversion
+0132   189F           00492     btfsc ADCON0, GO ; Is conversion done?
+0133   2???           00493     goto $-1 ; No, test again
+                      00494         
+                      00495     ; Obtener el valor de la conversión.
+0134   1283 1303      00496     banksel ADRESH
+0136   081E           00497     movf ADRESH, w
+0137   1283 1303      00498     banksel VALOR_CONVERSION
+0139   00A6           00499     movwf VALOR_CONVERSION
+                      00500         
+013A   0008           00501     return ; realizar_conversion
+                      00502 
+                      00503 ; Rutinas de contexto.
+013B                  00504 guardar_contexto
+013B   00A0           00505         movwf W_TEMP  ; Guardo w.
+013C   0E03           00506         swapf STATUS, w ; Swap status en w.
+013D   00A1           00507         movwf STATUS_TEMP ; Guardo STATUS.
+013E   0008           00508         return ; guardar_contexto
+                      00509         
+013F                  00510 guardar_contexto_case
+013F   00AF           00511         movwf W_TEMP_CASE  ; Guardo w.
+0140   0E03           00512         swapf STATUS, w ; Swap status en w.
+0141   00AE           00513         movwf STATUS_TEMP_CASE ; Guardo STATUS.
+                      00514         
+0142   0008           00515         return ; guardar_contexto_case
+                      00516     
+0143                  00517 cargar_contexto
+0143   0E21           00518         swapf STATUS_TEMP, w
+0144   0083           00519         movwf STATUS
+0145   0EA0           00520         swapf W_TEMP, f
+0146   0E20           00521         swapf W_TEMP, w
+0147   0008           00522         return ; cargar_contexto
+                      00523         
+0148                  00524 cargar_contexto_case
+0148   0E2E           00525         swapf STATUS_TEMP_CASE, w
+0149   0083           00526         movwf STATUS
+014A   0EAF           00527         swapf W_TEMP_CASE, f
+014B   0E2F           00528         swapf W_TEMP_CASE, w
+                      00529         
+014C   0008           00530         return ; cargar_contexto_case
+                      00531         
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
 Warning[205]: Found directive in column 1. (end)
-20C2 3EFF             00311 end
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  8
+20C2 3EFF             00532 end
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 13
 
 
 SYMBOL TABLE
@@ -452,7 +714,7 @@ BRG6                              00000006
 BRG7                              00000007
 BRG8                              00000000
 BRG9                              00000001
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE  9
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 14
 
 
 SYMBOL TABLE
@@ -511,7 +773,7 @@ CHS0                              00000002
 CHS1                              00000003
 CHS2                              00000004
 CHS3                              00000005
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 10
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 15
 
 
 SYMBOL TABLE
@@ -525,7 +787,7 @@ CM2CON1                           00000109
 CONTADOR_1                        00000022
 CONTADOR_2                        00000023
 CONTADOR_3                        00000024
-CONTADOR_TIMER1                   00000026
+CONTADOR_TIMER1                   0000002A
 CREN                              00000004
 CSRC                              00000007
 D                                 00000005
@@ -570,7 +832,7 @@ INDF                              00000000
 INTCON                            0000000B
 INTE                              00000004
 INTEDG                            00000006
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 11
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 16
 
 
 SYMBOL TABLE
@@ -590,6 +852,7 @@ IRCF0                             00000004
 IRCF1                             00000005
 IRCF2                             00000006
 IRP                               00000007
+ITERADOR                          00000030
 LTS                               00000001
 MC1OUT                            00000007
 MC2OUT                            00000006
@@ -628,13 +891,13 @@ P1M0                              00000006
 P1M1                              00000007
 PCL                               00000002
 PCLATH                            0000000A
-PCON                              0000008E
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 12
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 17
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+PCON                              0000008E
 PDC0                              00000000
 PDC1                              00000001
 PDC2                              00000002
@@ -666,6 +929,7 @@ PSSBD1                            00000001
 PSTRCON                           0000009D
 PULSR                             00000002
 PULSS                             00000003
+PUNTERO_ACTUAL                    0000002C
 PWM1CON                           0000009B
 R                                 00000002
 RA0                               00000000
@@ -686,14 +950,14 @@ RB6                               00000006
 RB7                               00000007
 RBIE                              00000003
 RBIF                              00000000
-RC0                               00000000
-RC1                               00000001
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 13
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 18
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+RC0                               00000000
+RC1                               00000001
 RC2                               00000002
 RC3                               00000003
 RC4                               00000004
@@ -736,7 +1000,7 @@ SCKP                              00000004
 SCS                               00000000
 SEN                               00000000
 SENDB                             00000003
-SIGUIENTE_PUNTERO                 00000027
+SIGUIENTE_PUNTERO                 0000002B
 SMP                               00000007
 SPBRG                             00000099
 SPBRGH                            0000009A
@@ -745,14 +1009,14 @@ SR0                               00000006
 SR1                               00000007
 SRCON                             00000185
 SREN                              00000005
-SSPADD                            00000093
-SSPBUF                            00000013
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 14
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 19
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+SSPADD                            00000093
+SSPBUF                            00000013
 SSPCON                            00000014
 SSPCON2                           00000091
 SSPEN                             00000005
@@ -767,6 +1031,7 @@ SSPOV                             00000006
 SSPSTAT                           00000094
 STATUS                            00000003
 STATUS_TEMP                       00000021
+STATUS_TEMP_CASE                  0000002E
 STRA                              00000000
 STRB                              00000001
 STRC                              00000002
@@ -790,6 +1055,7 @@ T1SYNC                            00000002
 T2CKPS0                           00000000
 T2CKPS1                           00000001
 T2CON                             00000012
+TEMP_W                            0000002D
 TMR0                              00000001
 TMR0IE                            00000005
 TMR0IF                            00000002
@@ -802,16 +1068,16 @@ TMR1IF                            00000000
 TMR1L                             0000000E
 TMR1ON                            00000000
 TMR2                              00000011
-TMR2IE                            00000001
-TMR2IF                            00000001
-TMR2ON                            00000002
-TOUTPS0                           00000003
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 15
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 20
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
 TOUTPS1                           00000004
 TOUTPS2                           00000005
 TOUTPS3                           00000006
@@ -861,16 +1127,16 @@ TUN0                              00000000
 TUN1                              00000001
 TUN2                              00000002
 TUN3                              00000003
-TUN4                              00000004
-TX8_9                             00000006
-TX9                               00000006
-TX9D                              00000000
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 16
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 21
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+TUN4                              00000004
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
 TXD8                              00000000
 TXEN                              00000005
 TXIE                              00000004
@@ -881,7 +1147,11 @@ UA                                00000001
 ULPWUE                            00000005
 ULPWUIE                           00000002
 ULPWUIF                           00000002
-VALOR_CONVERSION                  00000025
+VALOR_CONVERSION                  00000026
+VALOR_CONVERSIONH                 00000027
+VALOR_CONVERSIONL                 00000028
+VALOR_CONVERSION_MEMORIA          00000029
+VALOR_CONVERSION_TEMP             00000025
 VCFG0                             00000004
 VCFG1                             00000005
 VR0                               00000000
@@ -914,22 +1184,27 @@ WREN                              00000002
 WRERR                             00000003
 WUE                               00000001
 W_TEMP                            00000020
-Z                                 00000002
-_.org_1_0028                      00000028
-_.org_1_0066                      00000066
-_.org_1_0084                      00000084
-_.org_1_0094                      00000094
-_.org_1_00A7                      000000A7
-_BOR21V                           00003EFF
-_BOR40V                           00003FFF
-_BOR4V_BOR21V                     00003EFF
-_BOR4V_BOR40V                     00003FFF
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 17
+W_TEMP_CASE                       0000002F
+WhileLoopInicio                   00000071
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 22
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+Z                                 00000002
+_.org_1_0044                      00000044
+_.org_1_0081                      00000081
+_.org_1_008B                      0000008B
+_.org_1_00AD                      000000AD
+_.org_1_00F2                      000000F2
+_.org_1_0110                      00000110
+_.org_1_0120                      00000120
+_.org_1_0133                      00000133
+_BOR21V                           00003EFF
+_BOR40V                           00003FFF
+_BOR4V_BOR21V                     00003EFF
+_BOR4V_BOR40V                     00003FFF
 _BOREN_NSLEEP                     00003EFF
 _BOREN_OFF                        00003CFF
 _BOREN_ON                         00003FFF
@@ -970,6 +1245,12 @@ _IDLOC3                           00002003
 _IESO_OFF                         00003BFF
 _IESO_ON                          00003FFF
 _INTOSC                           00003FFD
+MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  16:09:11         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
 _INTOSCIO                         00003FFC
 _INTRC_OSC_CLKOUT                 00003FFD
 _INTRC_OSC_NOCLKOUT               00003FFC
@@ -983,12 +1264,6 @@ _PWRTE_ON                         00003FEF
 _WDTE_OFF                         00003FF7
 _WDTE_ON                          00003FFF
 _WDT_OFF                          00003FF7
-MPASM 5.84              OBLIGATORIO_FULL.ASM   11-19-2019  15:00:11         PAGE 18
-
-
-SYMBOL TABLE
-  LABEL                             VALUE 
-
 _WDT_ON                           00003FFF
 _WRT_1FOURTH                      00003BFF
 _WRT_256                          00003DFF
@@ -996,25 +1271,37 @@ _WRT_HALF                         000039FF
 _WRT_OFF                          00003FFF
 _XT_OSC                           00003FF9
 __16F887                          00000001
-cargar_contexto                   000000B3
-configuracion_inicial             00000013
-guardar_contexto                  000000AF
-guardar_memoria                   0000007E
-guardar_memoria_VALOR_CONTADOR    0000004C
-inicializar_eeprom                00000039
+cargar_contexto                   00000143
+cargar_contexto_case              00000148
+case_letras                       0000005A
+configuracion_inicial             00000017
+enviar_conversion_usart           0000008F
+enviar_w                          000000AA
+guardar_contexto                  0000013B
+guardar_contexto_case             0000013F
+guardar_memoria                   0000010A
+guardar_memoria_VALOR_CONVERSION  000000D8
+inicializar_eeprom                000000C5
 interrupt                         00000008
-interrupt_eeprom                  00000099
-interrupt_tmr1                    00000091
-leer_memoria                      00000073
+interrupt_eeprom                  00000125
+interrupt_tmr1                    0000011D
+interrupt_usart                   00000055
+leer_memoria                      000000FF
 main                              00000005
 mainloop                          00000006
-obtener_siguiente_puntero         0000005B
-re_iniciar_contador1              0000008C
-re_iniciar_timer1                 0000009D
-realizar_conversion               000000A5
+mapear                            000000B2
+mapear_enviar                     000000A7
+obtener_siguiente_puntero         000000E7
+re_iniciar_contador1              00000118
+re_iniciar_timer1                 00000129
+realizar_conversion               00000131
+rutina_letra_A                    00000061
+rutina_letra_H                    00000068
+sumar_30                          000000BB
+sumar_37                          000000C0
 
 Errors   :     0
-Warnings :     7 reported,     0 suppressed
-Messages :    24 reported,     0 suppressed
+Warnings :    10 reported,     0 suppressed
+Messages :    32 reported,     0 suppressed
 
 
