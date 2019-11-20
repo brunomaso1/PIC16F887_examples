@@ -302,7 +302,7 @@ mapear_hexa
     sublw b'00001001' ; 0x09 -> 9 decimal
     btfsc STATUS, Z
     goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
-    btfsc STATUS, C
+    btfss STATUS, C
     goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
     goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
 
