@@ -81,6 +81,12 @@
         <property key="map-file" value="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"/>
       </MPASMWIN-LD>
       <item path="Obligatorio - Full.asm" ex="true" overriding="false">
+        <MPASMWIN-AS>
+        </MPASMWIN-AS>
+        <MPASMWIN-LD>
+        </MPASMWIN-LD>
+        <mpasmsuite>
+        </mpasmsuite>
       </item>
       <item path="Obligatorio - Parte1 - ConversionAD&amp;BuferCircular.asm"
             ex="true"
@@ -103,8 +109,14 @@
         </mpasmsuite>
       </item>
       <item path="Obligatorio - Parte4 - Normalizacion de temperatura.asm"
-            ex="true"
+            ex="false"
             overriding="false">
+        <MPASMWIN-AS>
+        </MPASMWIN-AS>
+        <MPASMWIN-LD>
+        </MPASMWIN-LD>
+        <mpasmsuite>
+        </mpasmsuite>
       </item>
       <mpasmsuite>
         <property key="absolute-mode" value="false"/>

@@ -19,23 +19,33 @@
 ; Organizacion de la memoria de datos 
 cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
 ; Definicion de variables
-    W_TEMP ; 0X20
-    STATUS_TEMP ; 0X21
-    CONTADOR_1 ; 0x22
-    CONTADOR_2 ; 0x23
-    CONTADOR_3 ;0x24
-    VALOR_CONVERSION_TEMP ; 0x25
-    VALOR_CONVERSION ; 0x26
-    VALOR_CONVERSIONH ; 0x27
-    VALOR_CONVERSIONL ; 0x28
-    VALOR_CONVERSION_MEMORIA ; 0x29
-    CONTADOR_TIMER1 ; 0x30
-    SIGUIENTE_PUNTERO ; 0X31
-    PUNTERO_ACTUAL ; 0x32
-    TEMP_W ; 0x33
-    STATUS_TEMP_CASE ; 0x34
-    W_TEMP_CASE ; 0x35
-    ITERADOR ; 0x36
+    W_TEMP
+    STATUS_TEMP
+    VALOR_CONVERSION_TEMP
+    VALOR_CONVERSION
+    VALOR_CONVERSIONH
+    VALOR_CONVERSIONL
+    TEMP_W
+    STATUS_TEMP_CASE
+    W_TEMP_CASE
+    MULTIPLICANDO
+    DIVISOR
+    PRODL
+    PRODH
+    ASCII_TEMP
+    ASCII1
+    ASCII2
+    ASCII3
+    ASCII_CONVERSION
+    MULT
+    MULTIPLICANDO_REGLA
+    DIVISOR_REGLA
+    REGLAE
+    REGLAF
+    VALOR_CONVERSION_REGLA
+    COCIENTE
+    RESTO
+    DIVIDENDO
 
 endc
    
@@ -149,8 +159,7 @@ rutina_letra_A
     
     return ; rutina_letra_A
     
-; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
-; envía por el puerto usart.
+; Manda la conversion en formato decimal.
 rutina_letra_a
     call guardar_contexto_case
     
@@ -159,7 +168,7 @@ rutina_letra_a
     call enviar_conversion_usart_dec
     
      ; Envío grados centrígrados.
-    movlw d'167'
+    movlw d'167' ; °
     call enviar_w
     movlw d'67' ; C
     call enviar_w    
@@ -174,11 +183,204 @@ enviar_conversion_usart_dec
     banksel VALOR_CONVERSION_TEMP
     movwf VALOR_CONVERSION_TEMP
     
+    banksel MULTIPLICANDO_REGLA
+    movlw d'100'
+    movwf MULTIPLICANDO_REGLA
     
+    banksel DIVISOR_REGLA
+    movlw d'255'
+    movwf DIVISOR_REGLA
+ 
+    banksel VALOR_CONVERSION_TEMP
+    movf VALOR_CONVERSION_TEMP, w
+    
+    call regla_de_tres
+    
+    banksel REGLAE
+    movf REGLAE, w
+    call mapear_enviar_dec
     
     return ; enviar_conversion_usart_dec
 
+; Realiza una regla de tres.
+; w = w*MULTIPLICANDO_REGLA/DIVISOR_REGLA
+regla_de_tres
+    banksel VALOR_CONVERSION_REGLA
+    movwf VALOR_CONVERSION_REGLA
+    movf MULTIPLICANDO_REGLA, w
+    movwf MULTIPLICANDO
+    movf VALOR_CONVERSION_REGLA, w
+    call multiplicar
+    
+    ; Si la multiplicación dio 0, devuelvo 0.
+    banksel PRODH
+    movf PRODH, f
+    ; INICIO IF
+	btfss STATUS, Z
+	; THEN (PRODH <> 0)
+	goto $+6
+	; ELSE (PRODH = 0)
+	banksel PRODL
+	movf PRODL, f
+	; INICIO IF
+	    btfss STATUS, Z
+	    ; THEN (PRODL <> 0)
+	    goto $+2
+	    ; ELSE (PRODL = 0)
+	    retlw 0 ; Si es 0 el producto, devuelvo 0 porque no puedo dividir.
+	; FIN IF
+    ; FIN IF
+    
+    ; LOS PARAMETROS DE dividir YA ESTAN CARGADOS, CARGO SOLO w.
+    banksel DIVISOR_REGLA
+    movf DIVISOR_REGLA, w
+    call dividir
+    
+    banksel COCIENTE
+    movf COCIENTE, w
+    movwf REGLAE
+    movf RESTO, w
+    movwf REGLAF    
+    
+    return ; regla_de_tres
+
+; Multiplica dos numeros.
+; MULTIPLICANDO * w = PRODH:PRODL
+multiplicar
+    banksel MULT
+    movwf MULT
+    
+    ; Limpio los resultados.
+    banksel PRODL
+    clrf PRODL
+    clrf PRODH
+    
+    banksel MULTIPLICANDO
+    movf MULTIPLICANDO, f
+    ; INICIO IF
+	btfsc STATUS, Z
+	; THEN (MULTIPLICANDO = 0)
+	return
+	; ELSE (MULTIPLICANDO <> 0)
+	multiplicar_loop
+	    banksel MULT
+	    movf MULT, w
+	    banksel PRODL
+	    addwf PRODL, f
+	    btfsc STATUS, C
+	    incf PRODH, f
+	    decfsz MULTIPLICANDO, f
+	    goto multiplicar_loop	    
+    ; FIN IF
+    return ; multiplicar
+
+; Divide dos numeros.
+; PRODH:PRODL/w = w*COCIENTE + RESTO
+dividir
+    banksel COCIENTE
+    clrf COCIENTE
+    clrf RESTO
+    movwf DIVIDENDO
+    
+    loop_dividir
+	banksel PRODH
+	movf PRODH, f
+	; INICIO IF
+	    btfss STATUS, Z
+	    ; THEN (PRODH <> 0)
+	    goto restar_dividir
+	    ; ELSE (PRODH = 0)
+	    movf DIVIDENDO
+	    subwf PRODL
+	    ; INICIO IF
+		btfsc STATUS, C
+		; THEN (PRODL >= DIVIDENDO)
+		goto restar_dividir
+		; ELSE (PRODL < DIVIDENDO)
+		movf DIVIDENDO, w
+		movwf RESTO
+		return ; dividir
+	    ; FIN IF
+	; FIN IF
 	
+	restar_dividir
+	    banksel COCIENTE
+	    incf COCIENTE, f
+	    
+	    movf DIVIDENDO, w
+	    subwf PRODL, f
+	    ; INICIO IF
+		btfss STATUS, C
+		; THEN (PRODL >= DIVIDENDO)
+		goto $+2
+		; ELSE (PRODL < DIVIDENDO)
+		decf PRODH, f
+	    goto loop_dividir
+	
+    return ; dividir
+
+; Mapea y envía un valor decimal por el puerto usart.
+mapear_enviar_dec
+    call convertir_dec_ascii
+    
+    banksel ASCII1
+    movf ASCII1, w
+    call enviar_w
+    
+    banksel ASCII2
+    movf ASCII2, w
+    call enviar_w
+    
+    banksel ASCII3
+    movf ASCII3, w
+    call enviar_w   
+    
+    return ; mapear_enviar_dec
+
+; Convierte el valor numerico de w en ASCII.
+; w = ASCII3 ASCII2 ASCII1
+convertir_dec_ascii    
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII3 ; Almaceno el resultado
+    
+    movf ASCII_TEMP, w
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII2 ; Almaceno el resultado
+    
+    movf ASCII_TEMP, w
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII1 ; Almaceno el resultado
+    
+    return ; convertir_dec_ascii
+   
+; Convierte solo una parte del valor en w.
+; ASCII_CONVERSION = w MOD DIVISOR
+; w = w/DIVISOR
+convertir_valor_dec
+    banksel PRODL
+    movwf PRODL
+    movlw d'10'
+    call dividir
+    
+    banksel RESTO
+    movf RESTO, w    
+    addlw b'00110000' ; Sumo 30.
+    movwf ASCII_CONVERSION ; Almaceno el resultado
+    
+    banksel COCIENTE
+    movf COCIENTE, w
+    
+    return ; convertir_valor_dec
+    
 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
 ; usart.
 enviar_conversion_usart_hexa	
@@ -229,25 +431,27 @@ mapear_hexa
     banksel TEMP_W
     movwf TEMP_W
     sublw b'00001001' ; 0x09 -> 9 decimal
-    btfsc STATUS, Z
-    goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
-    btfss STATUS, C
-    goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
-    goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
+    ; INICIO IF
+	btfss STATUS, C
+	; THEN (w > 9)
+	goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+	; ELSE (w <= 9)
+	goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
+    ; FIN IF
 
 ; Sumo 30h al valor que tengo en w.
 sumar_30
     banksel TEMP_W
     movf TEMP_W, w
     addlw b'00110000' ; 0x30 -> 48 decimal
-    return ; sumar_30
+    return ; mapear_hexa
 
 ; Sumo 37h al valor que tengo en w.
 sumar_37
     banksel TEMP_W
     movf TEMP_W, w
     addlw b'00110111' ; 0x37 -> 55 decimal
-    return ; sumar_37
+    return ; mapear_hexa
 	
 ; Realiza la conversion y almacena los valores en variables.
 realizar_conversion

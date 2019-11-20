@@ -121,7 +121,7 @@ configuracion_inicial
     banksel PIE1 
     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
-    ; Chequeo inicial de la memoria EEPROM.
+     ; Chequeo inicial de la memoria EEPROM.
     movlw 0x30
     call leer_memoria
     ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
@@ -129,13 +129,13 @@ configuracion_inicial
     ; inicializarla.
     sublw 0x77
     ; INICIO IF
-	btfss STATUS, Z
-	; 0x30 tiene 0x77
+	btfsc STATUS, Z
+	; THEN (w = 0x77)
 	goto $+2
-	; 0x30 no tiene 0x77
+	; ELSE (w <> 0x77)
 	call inicializar_eeprom
-    ; FIN IF
-	
+    ; FIN IF   
+    
     ; Configuro el timer1.
     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
     bsf PIE1, TMR1IE    
@@ -226,10 +226,10 @@ rutina_letra_H
 	movf ITERADOR, w
 	sublw 0x49
 	; INICIO IF
-	    btfsc STATUS, C
-	    ; w <= 0x49 THEN
+	    btfsc STATUS, C	    
+	    ; THEN (w <= 0x49)
 	    goto $+3
-	    ; ELSE (ITERADOR > 0x49)
+	    ; ELSE (w > 0x49)
 	    movlw 0x40
 	    movwf ITERADOR
 	; FIN IF
@@ -240,12 +240,12 @@ rutina_letra_H
 	banksel ITERADOR
 	subwf ITERADOR, w
 	; INICIO IF
-	    btfss STATUS, Z
+	    btfsc STATUS, Z
 	    ; THEN (ITERADOR = PUNTERO_ACTUAL)
-	    goto $+2
-	    ; ELSE
+	    goto $+2 
+	    ; ELSE (ITERADOR <> PUNTERO_ACTUAL)
 	    goto WhileLoopInicio
-	; FIN IF	
+	; FIN IF
     call cargar_contexto_case
     
     return ; rutina_letra_H
@@ -300,25 +300,27 @@ mapear_hexa
     banksel TEMP_W
     movwf TEMP_W
     sublw b'00001001' ; 0x09 -> 9 decimal
-    btfsc STATUS, Z
-    goto sumar_30 ; Es 9, entonces sumo 0x30 = 0011 0000
-    btfsc STATUS, C
-    goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
-    goto sumar_30 ; Es menor 9, entonces sumo 0x30 = 0011 0000
+    ; INICIO IF
+	btfss STATUS, C
+	; THEN (w > 9)
+	goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+	; ELSE (w <= 9)
+	goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
+    ; FIN IF
 
 ; Sumo 30h al valor que tengo en w.
 sumar_30
     banksel TEMP_W
     movf TEMP_W, w
     addlw b'00110000' ; 0x30 -> 48 decimal
-    return ; sumar_30
+    return ; mapear_hexa
 
 ; Sumo 37h al valor que tengo en w.
 sumar_37
     banksel TEMP_W
     movf TEMP_W, w
     addlw b'00110111' ; 0x37 -> 55 decimal
-    return ; sumar_37
+    return ; mapear_hexa
 	
 ; Inicializa la memoria EEPROM.
 inicializar_eeprom
@@ -384,12 +386,12 @@ obtener_siguiente_puntero
     ; Chequeo que no me pase del buffer.
     sublw 0x49
     ; INICIO IF
-	    btfsc STATUS, C
-	    ; w <= 0x49 THEN
-	    goto $+3
-	    ; ELSE
-	    movlw 0x40
-	    movwf SIGUIENTE_PUNTERO
+	btfsc STATUS, C
+	; THEN (w <= 0x49)
+	goto $+3
+	; ELSE (w > 0x49)
+	movlw 0x40
+	movwf SIGUIENTE_PUNTERO
     ; FIN IF
 
     ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.

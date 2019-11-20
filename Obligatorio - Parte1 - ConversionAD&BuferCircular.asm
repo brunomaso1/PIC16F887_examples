@@ -89,10 +89,17 @@ configuracion_inicial
     ; Chequeo inicial de la memoria EEPROM.
     movlw 0x30
     call leer_memoria
+    ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
+    ; valor significa que la memoria está inicializada, sino hay que
+    ; inicializarla.
     sublw 0x77
-    btfss STATUS, Z
-    goto $+2
-    call inicializar_eeprom
+    ; INICIO IF
+	btfsc STATUS, Z
+	; THEN (w = 0x77)
+	goto $+2
+	; ELSE (w <> 0x77)
+	call inicializar_eeprom
+    ; FIN IF    
 	
     ; Configuro el timer1.
     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
@@ -178,12 +185,12 @@ obtener_siguiente_puntero
     ; Chequeo que no me pase del buffer.
     sublw 0x49
     ; INICIO IF
-	    btfsc STATUS, C
-	    ; w <= 0x49 THEN
-	    goto $+3
-	    ; ELSE
-	    movlw 0x40
-	    movwf SIGUIENTE_PUNTERO
+	btfsc STATUS, C
+	; THEN (w <= 0x49)
+	goto $+3
+	; ELSE (w > 0x59)
+	movlw 0x40
+	movwf SIGUIENTE_PUNTERO
     ; FIN IF
 
     ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
@@ -296,16 +303,16 @@ realizar_conversion
 
 ; Rutinas de contexto.
 guardar_contexto
-	movwf W_TEMP  ; Guardo w.
-	swapf STATUS, w ; Swap status en w.
-	movwf STATUS_TEMP ; Guardo STATUS.
-	return ; guardar_contexto
+    movwf W_TEMP  ; Guardo w.
+    swapf STATUS, w ; Swap status en w.
+    movwf STATUS_TEMP ; Guardo STATUS.
+    return ; guardar_contexto
 	
 cargar_contexto
-	swapf STATUS_TEMP, w
-	movwf STATUS
-	swapf W_TEMP, f
-	swapf W_TEMP, w
-	return ; cargar_contexto
+    swapf STATUS_TEMP, w
+    movwf STATUS
+    swapf W_TEMP, f
+    swapf W_TEMP, w
+    return ; cargar_contexto
 	
 end
