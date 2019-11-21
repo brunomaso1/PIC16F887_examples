@@ -1,4 +1,4 @@
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  1
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ Warning[205]: Found directive in column 1. (cblock)
   00000031            00039     DELAY_CONTADOR ; 0x31
   00000032            00040     DELAY_1MS_CONTADOR_1 ; 0x32
   00000033            00041     DELAY_1MS_CONTADOR_2 ; 0x33
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  2
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -116,7 +116,7 @@ Warning[203]: Found opcode in column 1. (goto)
 000E   2???           00087     call interrupt_usart
                       00088     
 000F   2???           00089     call cargar_contexto
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  3
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -175,7 +175,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
                       00130     ; Configuro la transmision.
 0035   1683 1303      00131     banksel TXSTA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  4
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -234,7 +234,7 @@ Message[302]: Register in operand not in bank 0.  Ensure that bank bits are corr
 0054   1283 1303      00180     banksel VALOR_CONVERSION_TEMP
 0056   00A5           00181     movwf VALOR_CONVERSION_TEMP
                       00182 
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  5
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -293,7 +293,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00233     ; FIN IF
                       00234 
                       00235 ; Sumo 30h al valor que tengo en w.
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  6
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -352,7 +352,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 00A2   1283 1303      00286     banksel REGLAE
 00A4   0836           00287     movf REGLAE, w
 00A5   2???           00288     call mapear_enviar_dec
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  7
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -411,7 +411,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00339     
                       00340     ; Limpio los resultados.
 00C7   1283 1303      00341     banksel PRODL
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  8
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -470,7 +470,7 @@ Warning[207]: Found label after column 1. (loop_dividir)
                       00390             ; FIN IF
                       00391         ; FIN IF
                       00392         
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE  9
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -529,7 +529,7 @@ Warning[207]: Found label after column 1. (restar_dividir)
                       00442     
 0111   0843           00443     movf ASCII_TEMP, w
 0112   2???           00444     call convertir_valor_dec
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 10
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -588,7 +588,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
 0139   00AF           00495     movwf W_TEMP_CASE  ; Guardo w.
 013A   0E03           00496     swapf STATUS, w ; Swap status en w.
 013B   00AE           00497     movwf STATUS_TEMP_CASE ; Guardo STATUS.
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 11
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 11
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -616,7 +616,7 @@ LOC  OBJECT CODE     LINE SOURCE TEXT
                       00517 
 Warning[205]: Found directive in column 1. (end)
 20C2 3EFF             00518 end
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 12
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 12
 
 
 SYMBOL TABLE
@@ -675,7 +675,7 @@ BRG16                             00000003
 BRG2                              00000002
 BRG3                              00000003
 BRG4                              00000004
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 13
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 13
 
 
 SYMBOL TABLE
@@ -734,7 +734,7 @@ CCPR1H                            00000016
 CCPR1L                            00000015
 CCPR2                             0000001B
 CCPR2H                            0000001C
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 14
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 14
 
 
 SYMBOL TABLE
@@ -793,7 +793,7 @@ FVREN                             00000000
 GCEN                              00000007
 GIE                               00000007
 GO                                00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 15
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 15
 
 
 SYMBOL TABLE
@@ -852,7 +852,7 @@ NOT_RC8                           00000006
 NOT_T1SYNC                        00000002
 NOT_TO                            00000004
 NOT_TX8                           00000006
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 16
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 16
 
 
 SYMBOL TABLE
@@ -911,7 +911,7 @@ PWM1CON                           0000009B
 R                                 00000002
 RA0                               00000000
 RA1                               00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 17
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 17
 
 
 SYMBOL TABLE
@@ -970,7 +970,7 @@ RESTO                             0000003D
 RP0                               00000005
 RP1                               00000006
 RSEN                              00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 18
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 18
 
 
 SYMBOL TABLE
@@ -1029,7 +1029,7 @@ T1CON                             00000010
 T1GINV                            00000007
 T1GIV                             00000007
 T1GSS                             00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 19
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 19
 
 
 SYMBOL TABLE
@@ -1088,7 +1088,7 @@ TRISC4                            00000004
 TRISC5                            00000005
 TRISC6                            00000006
 TRISC7                            00000007
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 20
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 20
 
 
 SYMBOL TABLE
@@ -1147,7 +1147,7 @@ VRSS                              00000004
 W                                 00000000
 WCOL                              00000007
 WDTCON                            00000105
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 21
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 21
 
 
 SYMBOL TABLE
@@ -1206,7 +1206,7 @@ _EXTRCIO                          00003FFE
 _EXTRC_OSC_CLKOUT                 00003FFF
 _EXTRC_OSC_NOCLKOUT               00003FFE
 _FCMEN_OFF                        000037FF
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 22
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 22
 
 
 SYMBOL TABLE
@@ -1249,6 +1249,8 @@ _WRT_HALF                         000039FF
 _WRT_OFF                          00003FFF
 _XT_OSC                           00003FF9
 __16F887                          00000001
+__DEBUG                           
+__MPLAB_DEBUGGER_PK3              1
 cargar_contexto                   0000013D
 cargar_contexto_case              00000144
 case_letras                       00000046
@@ -1263,14 +1265,14 @@ guardar_contexto                  00000131
 guardar_contexto_case             00000137
 interrupt                         00000008
 interrupt_usart                   00000041
-loop_dividir                      000000E0
-main                              00000005
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  18:03:19         PAGE 23
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-21-2019  17:59:24         PAGE 23
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+loop_dividir                      000000E0
+main                              00000005
 mainloop                          00000006
 mapear_enviar_dec                 000000F6
 mapear_enviar_hexa                0000006C

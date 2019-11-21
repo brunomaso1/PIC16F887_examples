@@ -29,13 +29,16 @@ cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
     VALOR_CONVERSIONH ; 0x27
     VALOR_CONVERSIONL ; 0x28
     VALOR_CONVERSION_MEMORIA ; 0x29
-    CONTADOR_TIMER1 ; 0x30
-    SIGUIENTE_PUNTERO ; 0X31
-    PUNTERO_ACTUAL ; 0x32
-    TEMP_W ; 0x33
-    STATUS_TEMP_CASE ; 0x34
-    W_TEMP_CASE ; 0x35
-    ITERADOR ; 0x36
+    CONTADOR_TIMER1 ; 0x2A
+    SIGUIENTE_PUNTERO ; 0X2B
+    PUNTERO_ACTUAL ; 0x2C
+    TEMP_W ; 0x2D
+    STATUS_TEMP_CASE ; 0x2E
+    W_TEMP_CASE ; 0x2F
+    ITERADOR ; 0x30
+    DELAY_CONTADOR ; 0x31
+    DELAY_1MS_CONTADOR_1 ; 0x32
+    DELAY_1MS_CONTADOR_2 ; 0x33
 
 endc
    
@@ -62,16 +65,22 @@ interrupt
 
     ; Identifico la interrupcion.
     banksel PIR1
-    btfsc PIR1, TMR1IF ; Interrupcion timer1?
-    call interrupt_tmr1
+    btfss PIR1, TMR1IF ; Interrupcion timer1?
+    goto $+3
+    bcf PIR1, TMR1IF
+    call interrupt_tmr1    
 
     banksel PIR1
-    btfsc PIR1, RCIF ; Interrupcion usart?
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    bcf PIR1, RCIF
     call interrupt_usart
-
+    
     banksel PIR2
-    btfsc PIR2, EEIF; Interrupcion escritura?
-    call interrupt_eeprom
+    btfss PIR2, EEIF; Interrupcion escritura?
+    goto $+3
+    bcf PIR2, EEIF
+    call interrupt_eeprom    
 
     call cargar_contexto
     retfie ; interrupt
@@ -88,6 +97,10 @@ configuracion_inicial
     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
 
     ; Configuracion de la conversión analógica.
+    banksel ADRESH
+    clrf ADRESH
+    banksel ADRESL
+    clrf ADRESL
     banksel ADCON1
     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd	
     ; Configuración del reloj y encendido del conversor analogico.
@@ -136,7 +149,7 @@ configuracion_inicial
 	call inicializar_eeprom
     ; FIN IF   
     
-    ; Configuro el timer1.
+     ; Configuro el timer1.
     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
     bsf PIE1, TMR1IE    
     banksel PIR1
@@ -146,7 +159,7 @@ configuracion_inicial
     ; Configurar preescaler timer1(1:8)
     bsf T1CON, T1CKPS0
     bsf T1CON, T1CKPS1
-    bcf T1CON, TMR1ON ; Encender el timer.
+    bsf T1CON, TMR1ON ; Encender el timer.
     ; Reinicio el contador tmr1.
     call re_iniciar_contador1
     ; Reinicio el timer1.
@@ -221,16 +234,16 @@ rutina_letra_H
 	
 	; Incremento ITERADOR.
 	banksel ITERADOR
-	incf ITERADOR, f
+	decf ITERADOR, f
 	; Chequeo que no me pase el buffer.
 	movf ITERADOR, w
-	sublw 0x49
+	sublw 0x3F
 	; INICIO IF
-	    btfsc STATUS, C	    
-	    ; THEN (w <= 0x49)
+	    btfss STATUS, C	    
+	    ; THEN (w > 0x3F)
 	    goto $+3
-	    ; ELSE (w > 0x49)
-	    movlw 0x40
+	    ; ELSE (w <= 0x3F)
+	    movlw 0x49
 	    movwf ITERADOR
 	; FIN IF
 	
@@ -257,7 +270,7 @@ enviar_conversion_usart_hexa
     movwf VALOR_CONVERSION_TEMP
 
     ; Obtengo los valores High y Low de la conversion.
-    andlw d'11110000'
+    andlw b'11110000'
     banksel VALOR_CONVERSIONH
     movwf VALOR_CONVERSIONH
     swapf VALOR_CONVERSIONH, f 	; Hago swamp para cambiar de lugar y 
@@ -265,18 +278,18 @@ enviar_conversion_usart_hexa
     
     banksel VALOR_CONVERSION_TEMP
     movf VALOR_CONVERSION_TEMP, w
-    andlw d'00001111'
+    andlw b'00001111'
     banksel VALOR_CONVERSIONL
     movwf VALOR_CONVERSIONL
+    
+    banksel VALOR_CONVERSIONH
+    movf VALOR_CONVERSIONH, w
+    call mapear_enviar_hexa
     
     ; Mapeo y envío los valores por el puerto usart.
     banksel VALOR_CONVERSIONL
     movf VALOR_CONVERSIONL, w
-    call mapear_enviar_hexa
-	
-    banksel VALOR_CONVERSIONH
-    movf VALOR_CONVERSIONH, w
-    call mapear_enviar_hexa
+    call mapear_enviar_hexa    
     
     return ; enviar_conversion_usart_hexa
 	
@@ -329,7 +342,7 @@ inicializar_eeprom
     movlw 0x30
     banksel EEADR
     movwf EEADR
-    ; Cargo el dato que indica que está¡ inicializada la memoria.
+    ; Cargo el dato que indica que está inicializada la memoria.
     movlw 0x77
     banksel EEDAT
     movwf EEDAT
@@ -341,7 +354,7 @@ inicializar_eeprom
     movlw 0x31
     banksel EEADR
     movwf EEADR
-    ; Cargo el dato que indica que está, inicializada la memoria.
+    ; Cargo el dato que indica que está inicializada la memoria.
     movlw 0x49
     banksel EEDAT
     movwf EEDAT
@@ -437,13 +450,16 @@ guardar_memoria
     bsf EECON1, WR ; Se comienza la escritura.
     ; FIN SECCION INTOCABLE
 
-    bsf INTCON, GIE ; Activo las interrupciones.	
+    bsf INTCON, GIE ; Activo las interrupciones.
+    btfsc EECON1, WR
+    goto $-1
+    bcf EECON1, WREN
     return ; guardar_memoria
 	
 ; Configurar CONTADOR_TIMER1
 re_iniciar_contador1
     banksel CONTADOR_TIMER1
-    movlw d'10'
+    movlw d'100'
     movwf CONTADOR_TIMER1
 
     return ; re_iniciar_contador1
@@ -504,12 +520,14 @@ realizar_conversion
 
 ; Rutinas de contexto.
 guardar_contexto
+    banksel W_TEMP
     movwf W_TEMP  ; Guardo w.
     swapf STATUS, w ; Swap status en w.
     movwf STATUS_TEMP ; Guardo STATUS.
     return ; guardar_contexto
 	
 guardar_contexto_case
+    banksel W_TEMP_CASE
     movwf W_TEMP_CASE  ; Guardo w.
     swapf STATUS, w ; Swap status en w.
     movwf STATUS_TEMP_CASE ; Guardo STATUS.
@@ -517,6 +535,7 @@ guardar_contexto_case
     return ; guardar_contexto_case
     
 cargar_contexto
+    banksel STATUS_TEMP
     swapf STATUS_TEMP, w
     movwf STATUS
     swapf W_TEMP, f
@@ -524,11 +543,12 @@ cargar_contexto
     return ; cargar_contexto
 	
 cargar_contexto_case
+    banksel STATUS_TEMP_CASE
     swapf STATUS_TEMP_CASE, w
     movwf STATUS
     swapf W_TEMP_CASE, f
     swapf W_TEMP_CASE, w
 
     return ; cargar_contexto_case
-	
+
 end

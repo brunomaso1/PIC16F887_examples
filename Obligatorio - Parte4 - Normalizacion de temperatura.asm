@@ -19,33 +19,43 @@
 ; Organizacion de la memoria de datos 
 cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
 ; Definicion de variables
-    W_TEMP
-    STATUS_TEMP
-    VALOR_CONVERSION_TEMP
-    VALOR_CONVERSION
-    VALOR_CONVERSIONH
-    VALOR_CONVERSIONL
-    TEMP_W
-    STATUS_TEMP_CASE
-    W_TEMP_CASE
-    MULTIPLICANDO
-    DIVISOR
-    PRODL
-    PRODH
-    ASCII_TEMP
-    ASCII1
-    ASCII2
-    ASCII3
-    ASCII_CONVERSION
-    MULT
-    MULTIPLICANDO_REGLA
-    DIVISOR_REGLA
-    REGLAE
-    REGLAF
-    VALOR_CONVERSION_REGLA
-    COCIENTE
-    RESTO
-    DIVIDENDO
+    W_TEMP ; 0X20
+    STATUS_TEMP ; 0X21
+    CONTADOR_1 ; 0x22
+    CONTADOR_2 ; 0x23
+    CONTADOR_3 ;0x24
+    VALOR_CONVERSION_TEMP ; 0x25
+    VALOR_CONVERSION ; 0x26
+    VALOR_CONVERSIONH ; 0x27
+    VALOR_CONVERSIONL ; 0x28
+    VALOR_CONVERSION_MEMORIA ; 0x29
+    CONTADOR_TIMER1 ; 0x2A
+    SIGUIENTE_PUNTERO ; 0X2B
+    PUNTERO_ACTUAL ; 0x2C
+    TEMP_W ; 0x2D
+    STATUS_TEMP_CASE ; 0x2E
+    W_TEMP_CASE ; 0x2F
+    ITERADOR ; 0x30
+    DELAY_CONTADOR ; 0x31
+    DELAY_1MS_CONTADOR_1 ; 0x32
+    DELAY_1MS_CONTADOR_2 ; 0x33
+    MULTIPLICANDO_REGLA ; 0x34
+    DIVISOR_REGLA ; 0x35
+    REGLAE ; 0x36
+    REGLAF ; 0x37
+    VALOR_CONVERSION_REGLA ; 0x38
+    MULTIPLICANDO ; 0x39
+    PRODH ; 0x3A
+    PRODL ; 0x3B
+    COCIENTE ; 0x3C
+    RESTO ; 0x3D
+    MULT ; 0x3E
+    DIVIDENDO ; 0x3F
+    ASCII1 ; 0x40
+    ASCII2 ; 0x41
+    ASCII3 ; 0x42
+    ASCII_TEMP ; 0x43
+    ASCII_CONVERSION ; 0x44
 
 endc
    
@@ -71,9 +81,11 @@ interrupt
     call guardar_contexto
 
     banksel PIR1
-    btfsc PIR1, RCIF ; Interrupcion usart?
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    bcf PIR1, RCIF
     call interrupt_usart
-
+    
     call cargar_contexto
     retfie ; interrupt
 	
@@ -89,6 +101,10 @@ configuracion_inicial
     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
 
     ; Configuracion de la conversión analógica.
+    banksel ADRESH
+    clrf ADRESH
+    banksel ADRESL
+    clrf ADRESL
     banksel ADCON1
     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd	
     ; Configuración del reloj y encendido del conversor analogico.
@@ -121,7 +137,7 @@ configuracion_inicial
     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
     banksel PIE1 
     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
-	
+
     return ; configurar_puertos
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
@@ -139,7 +155,7 @@ case_letras
     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
     btfsc STATUS, Z
     call rutina_letra_A
- 
+    
     xorlw b'01100001' ^ b'01000001' ; 0x61 = 'a' (ASCII)
     btfsc STATUS, Z               
     call rutina_letra_a
@@ -156,9 +172,80 @@ rutina_letra_A
     call enviar_conversion_usart_hexa
 
     call cargar_contexto_case
-    
     return ; rutina_letra_A
+    	
+; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
+; usart.
+enviar_conversion_usart_hexa	
+    banksel VALOR_CONVERSION_TEMP
+    movwf VALOR_CONVERSION_TEMP
+
+    ; Obtengo los valores High y Low de la conversion.
+    andlw b'11110000'
+    banksel VALOR_CONVERSIONH
+    movwf VALOR_CONVERSIONH
+    swapf VALOR_CONVERSIONH, f 	; Hago swamp para cambiar de lugar y 
+				; tener todos en los bits menos significativos.
     
+    banksel VALOR_CONVERSION_TEMP
+    movf VALOR_CONVERSION_TEMP, w
+    andlw b'00001111'
+    banksel VALOR_CONVERSIONL
+    movwf VALOR_CONVERSIONL
+    
+    banksel VALOR_CONVERSIONH
+    movf VALOR_CONVERSIONH, w
+    call mapear_enviar_hexa
+    
+    ; Mapeo y envío los valores por el puerto usart.
+    banksel VALOR_CONVERSIONL
+    movf VALOR_CONVERSIONL, w
+    call mapear_enviar_hexa    
+    
+    return ; enviar_conversion_usart_hexa
+	
+; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
+mapear_enviar_hexa 
+    call mapear_hexa
+    call enviar_w
+    return ; mapear_enviar_hexa
+	
+; Envia el valor del registro w por el puerto USART.
+enviar_w
+    banksel PIR1
+    btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
+    goto $-1 ; No, vuelvo a chequear hasta que esté libre.
+    banksel TXREG
+    movwf TXREG 
+    return ; enviar_w
+	
+; Mapea el valor de w a un caracter ASCII y lo guarda en w.
+mapear_hexa
+    banksel TEMP_W
+    movwf TEMP_W
+    sublw b'00001001' ; 0x09 -> 9 decimal
+    ; INICIO IF
+	btfss STATUS, C
+	; THEN (w > 9)
+	goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+	; ELSE (w <= 9)
+	goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
+    ; FIN IF
+
+; Sumo 30h al valor que tengo en w.
+sumar_30
+    banksel TEMP_W
+    movf TEMP_W, w
+    addlw b'00110000' ; 0x30 -> 48 decimal
+    return ; mapear_hexa
+
+; Sumo 37h al valor que tengo en w.
+sumar_37
+    banksel TEMP_W
+    movf TEMP_W, w
+    addlw b'00110111' ; 0x37 -> 55 decimal
+    return ; mapear_hexa
+
 ; Manda la conversion en formato decimal.
 rutina_letra_a
     call guardar_contexto_case
@@ -168,7 +255,7 @@ rutina_letra_a
     call enviar_conversion_usart_dec
     
      ; Envío grados centrígrados.
-    movlw d'167' ; °
+    movlw d'186' ; °
     call enviar_w
     movlw d'67' ; C
     call enviar_w    
@@ -176,7 +263,7 @@ rutina_letra_a
     call cargar_contexto_case
     
     return ; rutina_letra_a
-    
+	
 ; Obtiene el valor de la conversion en w, lo mapea a decimal y lo envía por el
 ; puerto usart.
 enviar_conversion_usart_dec
@@ -218,7 +305,7 @@ regla_de_tres
     ; INICIO IF
 	btfss STATUS, Z
 	; THEN (PRODH <> 0)
-	goto $+6
+	goto $+7
 	; ELSE (PRODH = 0)
 	banksel PRODL
 	movf PRODL, f
@@ -290,14 +377,14 @@ dividir
 	    ; THEN (PRODH <> 0)
 	    goto restar_dividir
 	    ; ELSE (PRODH = 0)
-	    movf DIVIDENDO
-	    subwf PRODL
+	    movf DIVIDENDO, w
+	    subwf PRODL, w
 	    ; INICIO IF
 		btfsc STATUS, C
 		; THEN (PRODL >= DIVIDENDO)
 		goto restar_dividir
 		; ELSE (PRODL < DIVIDENDO)
-		movf DIVIDENDO, w
+		movf PRODL, w
 		movwf RESTO
 		return ; dividir
 	    ; FIN IF
@@ -310,10 +397,10 @@ dividir
 	    movf DIVIDENDO, w
 	    subwf PRODL, f
 	    ; INICIO IF
-		btfss STATUS, C
-		; THEN (PRODL >= DIVIDENDO)
+		btfsc STATUS, C
+		; THEN (PRODL < DIVIDENDO)
 		goto $+2
-		; ELSE (PRODL < DIVIDENDO)
+		; ELSE (PRODL >= DIVIDENDO)
 		decf PRODH, f
 	    goto loop_dividir
 	
@@ -381,78 +468,6 @@ convertir_valor_dec
     
     return ; convertir_valor_dec
     
-; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
-; usart.
-enviar_conversion_usart_hexa	
-    banksel VALOR_CONVERSION_TEMP
-    movwf VALOR_CONVERSION_TEMP
-
-    ; Obtengo los valores High y Low de la conversion.
-    andlw d'11110000'
-    banksel VALOR_CONVERSIONH
-    movwf VALOR_CONVERSIONH
-    swapf VALOR_CONVERSIONH, f 	; Hago swamp para cambiar de lugar y 
-				; tener todos en los bits menos significativos.
-    
-    banksel VALOR_CONVERSION_TEMP
-    movf VALOR_CONVERSION_TEMP, w
-    andlw d'00001111'
-    banksel VALOR_CONVERSIONL
-    movwf VALOR_CONVERSIONL
-    
-    ; Mapeo y envío los valores por el puerto usart.
-    banksel VALOR_CONVERSIONL
-    movf VALOR_CONVERSIONL, w
-    call mapear_enviar_hexa
-	
-    banksel VALOR_CONVERSIONH
-    movf VALOR_CONVERSIONH, w
-    call mapear_enviar_hexa
-    
-    return ; enviar_conversion_usart_hexa
-	
-; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
-mapear_enviar_hexa 
-    call mapear_hexa    
-    call enviar_w
-    return ; mapear_enviar_hexa
-	
-; Envia el valor del registro w por el puerto USART.
-enviar_w
-    banksel PIR1
-    btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
-    goto $-1 ; No, vuelvo a chequear hasta que esté libre.
-    banksel TXREG
-    movwf TXREG 
-    return ; enviar_w
-	
-; Mapea el valor de w a un caracter ASCII y lo guarda en w.
-mapear_hexa
-    banksel TEMP_W
-    movwf TEMP_W
-    sublw b'00001001' ; 0x09 -> 9 decimal
-    ; INICIO IF
-	btfss STATUS, C
-	; THEN (w > 9)
-	goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
-	; ELSE (w <= 9)
-	goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
-    ; FIN IF
-
-; Sumo 30h al valor que tengo en w.
-sumar_30
-    banksel TEMP_W
-    movf TEMP_W, w
-    addlw b'00110000' ; 0x30 -> 48 decimal
-    return ; mapear_hexa
-
-; Sumo 37h al valor que tengo en w.
-sumar_37
-    banksel TEMP_W
-    movf TEMP_W, w
-    addlw b'00110111' ; 0x37 -> 55 decimal
-    return ; mapear_hexa
-	
 ; Realiza la conversion y almacena los valores en variables.
 realizar_conversion
     bsf ADCON0, GO ; Start conversion
@@ -469,13 +484,14 @@ realizar_conversion
 
 ; Rutinas de contexto.
 guardar_contexto
+    banksel W_TEMP
     movwf W_TEMP  ; Guardo w.
     swapf STATUS, w ; Swap status en w.
     movwf STATUS_TEMP ; Guardo STATUS.
-    
     return ; guardar_contexto
 	
 guardar_contexto_case
+    banksel W_TEMP_CASE
     movwf W_TEMP_CASE  ; Guardo w.
     swapf STATUS, w ; Swap status en w.
     movwf STATUS_TEMP_CASE ; Guardo STATUS.
@@ -483,19 +499,20 @@ guardar_contexto_case
     return ; guardar_contexto_case
     
 cargar_contexto
+    banksel STATUS_TEMP
     swapf STATUS_TEMP, w
     movwf STATUS
     swapf W_TEMP, f
     swapf W_TEMP, w
-    
     return ; cargar_contexto
 	
 cargar_contexto_case
+    banksel STATUS_TEMP_CASE
     swapf STATUS_TEMP_CASE, w
     movwf STATUS
     swapf W_TEMP_CASE, f
     swapf W_TEMP_CASE, w
 
     return ; cargar_contexto_case
-	
+
 end

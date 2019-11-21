@@ -99,16 +99,6 @@
         </mpasmsuite>
       </item>
       <item path="Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm"
-            ex="true"
-            overriding="false">
-        <MPASMWIN-AS>
-        </MPASMWIN-AS>
-        <MPASMWIN-LD>
-        </MPASMWIN-LD>
-        <mpasmsuite>
-        </mpasmsuite>
-      </item>
-      <item path="Obligatorio - Parte4 - Normalizacion de temperatura.asm"
             ex="false"
             overriding="false">
         <MPASMWIN-AS>
@@ -118,6 +108,19 @@
         <mpasmsuite>
         </mpasmsuite>
       </item>
+      <item path="Obligatorio - Parte4 - Normalizacion de temperatura.asm"
+            ex="true"
+            overriding="false">
+        <MPASMWIN-AS>
+        </MPASMWIN-AS>
+        <MPASMWIN-LD>
+        </MPASMWIN-LD>
+        <mpasmsuite>
+        </mpasmsuite>
+      </item>
+      <PICkit3PlatformTool>
+        <property key="firmware.download.all" value="false"/>
+      </PICkit3PlatformTool>
       <mpasmsuite>
         <property key="absolute-mode" value="false"/>
         <property key="eeprom-width" value="8"/>

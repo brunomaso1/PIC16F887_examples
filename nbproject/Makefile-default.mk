@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED="Obligatorio - Parte4 - Normalizacion de temperatura.asm"
+SOURCEFILES_QUOTED_IF_SPACED="Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm"
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED="${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o"
-POSSIBLE_DEPFILES="${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o.d"
+OBJECTFILES_QUOTED_IF_SPACED="${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o"
+POSSIBLE_DEPFILES="${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o.d"
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/Obligatorio\ -\ Parte4\ -\ Normalizacion\ de\ temperatura.o
+OBJECTFILES=${OBJECTDIR}/Obligatorio\ -\ Parte2\ -\ Protocolo\ entre\ PIC\ y\ el\ PC.o
 
 # Source Files
-SOURCEFILES=Obligatorio - Parte4 - Normalizacion de temperatura.asm
+SOURCEFILES=Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm
 
 
 
@@ -95,22 +95,22 @@ MP_LINKER_DEBUG_OPTION=-r=ROM@0x1F00:0x1FFE -r=RAM@SHARE:0x70:0x70 -r=RAM@SHARE:
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: assemble
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/Obligatorio\ -\ Parte4\ -\ Normalizacion\ de\ temperatura.o: Obligatorio\ -\ Parte4\ -\ Normalizacion\ de\ temperatura.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/Obligatorio\ -\ Parte2\ -\ Protocolo\ entre\ PIC\ y\ el\ PC.o: Obligatorio\ -\ Parte2\ -\ Protocolo\ entre\ PIC\ y\ el\ PC.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o".d 
-	@${RM} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o" 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o\" \"Obligatorio - Parte4 - Normalizacion de temperatura.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o"
-	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o\" \"Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 else
-${OBJECTDIR}/Obligatorio\ -\ Parte4\ -\ Normalizacion\ de\ temperatura.o: Obligatorio\ -\ Parte4\ -\ Normalizacion\ de\ temperatura.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/Obligatorio\ -\ Parte2\ -\ Protocolo\ entre\ PIC\ y\ el\ PC.o: Obligatorio\ -\ Parte2\ -\ Protocolo\ entre\ PIC\ y\ el\ PC.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o".d 
-	@${RM} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o" 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o\" \"Obligatorio - Parte4 - Normalizacion de temperatura.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o"
-	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte4 - Normalizacion de temperatura.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o\" \"Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte2 - Protocolo entre PIC y el PC.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 endif
 

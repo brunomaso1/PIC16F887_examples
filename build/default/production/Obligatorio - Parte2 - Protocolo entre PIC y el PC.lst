@@ -1,0 +1,1343 @@
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ; PIC16F887 Configuration Bit Settings
+                      00002 ; Assembly source line config statements
+                      00003 #include "p16f887.inc"
+                      00001         LIST
+                      00002 
+                      00003 ;==========================================================================
+                      00004 ; Build date : Mar 17 2019
+                      00005 ;  MPASM PIC16F887 processor include
+                      00006 ; 
+                      00007 ;  (c) Copyright 1999-2019 Microchip Technology, All rights reserved
+                      00008 ;==========================================================================
+                      00009 
+                      00810         LIST
+                      00004     
+                      00005 ; Bits de configuracion
+                      00006 
+                      00007 ; CONFIG1
+                      00008 ; __config 0xE0C2
+2007   20C2           00009  __CONFIG _CONFIG1, _FOSC_HS & _WDTE_OFF & _PWRTE_ON & _MCLRE_OFF & _CP_OFF & _CPD_OFF & _BOREN_OFF & _I
+                            ESO_OFF & _FCMEN_OFF & _LVP_OFF
+                      00010 ; CONFIG2
+                      00011 ; __config 0xFEFF
+2008   3EFF           00012  __CONFIG _CONFIG2, _BOR4V_BOR21V & _WRT_OFF
+                      00013 
+                      00014 ; Organizacion de la memoria EEPROM.
+                      00015 ; 0x30 -> Flag que indica si está¡ usado el buffer o no.
+                      00016 ; 0x31 -> Puntero actual del buffer.
+                      00017 ; 0x40 - 0x49 -> Buffer.
+                      00018     
+                      00019 ; Organizacion de la memoria de datos 
+Warning[205]: Found directive in column 1. (cblock)
+                      00020 cblock 0x20     ; Comienzo a escribir la memoria de datos en la direccion 0x20
+                      00021 ; Definicion de variables
+  00000020            00022     W_TEMP ; 0X20
+  00000021            00023     STATUS_TEMP ; 0X21
+  00000022            00024     CONTADOR_1 ; 0x22
+  00000023            00025     CONTADOR_2 ; 0x23
+  00000024            00026     CONTADOR_3 ;0x24
+  00000025            00027     VALOR_CONVERSION_TEMP ; 0x25
+  00000026            00028     VALOR_CONVERSION ; 0x26
+  00000027            00029     VALOR_CONVERSIONH ; 0x27
+  00000028            00030     VALOR_CONVERSIONL ; 0x28
+  00000029            00031     VALOR_CONVERSION_MEMORIA ; 0x29
+  0000002A            00032     CONTADOR_TIMER1 ; 0x2A
+  0000002B            00033     SIGUIENTE_PUNTERO ; 0X2B
+  0000002C            00034     PUNTERO_ACTUAL ; 0x2C
+  0000002D            00035     TEMP_W ; 0x2D
+  0000002E            00036     STATUS_TEMP_CASE ; 0x2E
+  0000002F            00037     W_TEMP_CASE ; 0x2F
+  00000030            00038     ITERADOR ; 0x30
+  00000031            00039     DELAY_CONTADOR ; 0x31
+  00000032            00040     DELAY_1MS_CONTADOR_1 ; 0x32
+  00000033            00041     DELAY_1MS_CONTADOR_2 ; 0x33
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00042 
+Warning[205]: Found directive in column 1. (ENDC)
+                      00043 endc
+                      00044    
+                      00045 ;Organizacion de la memoria de programacion
+Warning[205]: Found directive in column 1. (org)
+                      00046 org 0x0000
+Warning[203]: Found opcode in column 1. (goto)
+0000   2???           00047 goto main
+                      00048 
+Warning[205]: Found directive in column 1. (org)
+                      00049 org 0x0004
+Warning[203]: Found opcode in column 1. (goto)
+0004   2???           00050 goto interrupt
+                      00051 
+                      00052 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00053         
+0005                  00054 main
+0005   2???           00055     call configuracion_inicial
+                      00056     
+0006                  00057 mainloop
+0006   2???           00058     call realizar_conversion
+0007   2???           00059     goto mainloop
+                      00060         
+                      00061 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00062 
+0008                  00063 interrupt
+0008   2???           00064     call guardar_contexto
+                      00065 
+                      00066     ; Identifico la interrupcion.
+0009   1283 1303      00067     banksel PIR1
+000B   1C0C           00068     btfss PIR1, TMR1IF ; Interrupcion timer1?
+000C   2???           00069     goto $+3
+000D   100C           00070     bcf PIR1, TMR1IF
+000E   2???           00071     call interrupt_tmr1    
+                      00072 
+000F   1283 1303      00073     banksel PIR1
+0011   1E8C           00074     btfss PIR1, RCIF ; Interrupcion usart?
+0012   2???           00075     goto $+3
+0013   128C           00076     bcf PIR1, RCIF
+0014   2???           00077     call interrupt_usart
+                      00078     
+0015   1283 1303      00079     banksel PIR2
+0017   1E0D           00080     btfss PIR2, EEIF; Interrupcion escritura?
+0018   2???           00081     goto $+3
+0019   120D           00082     bcf PIR2, EEIF
+001A   2???           00083     call interrupt_eeprom    
+                      00084 
+001B   2???           00085     call cargar_contexto
+001C   0009           00086     retfie ; interrupt
+                      00087         
+                      00088 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00089 
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+001D                  00090 configuracion_inicial   
+                      00091     ; Configuro las entradas de voltaje analogicas (PUERTOA).
+001D   1683 1303      00092     banksel TRISA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+001F   1405           00093     bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0020   1485           00094     bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analógica)
+0021   1683 1703      00095     banksel ANSEL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0023   1408           00096     bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0024   1488           00097     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
+                      00098 
+                      00099     ; Configuracion de la conversión analógica.
+0025   1283 1303      00100     banksel ADRESH
+0027   019E           00101     clrf ADRESH
+0028   1683 1303      00102     banksel ADRESL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002A   019E           00103     clrf ADRESL
+002B   1683 1303      00104     banksel ADCON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002D   019F           00105     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd     
+                      00106     ; Configuración del reloj y encendido del conversor analogico.
+002E   1283 1303      00107     banksel ADCON0 
+0030   3081           00108     movlw b'10000001'
+0031   009F           00109     movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
+                      00110 
+                      00111     ; Configuro las interrupciones.
+0032   178B           00112     bsf INTCON, GIE ; Global interrupt enable bit.
+0033   170B           00113     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
+                      00114         
+                      00115     ; Configuracion puerto serie (EUSART)
+                      00116     ; Configuracion baudrate
+0034   1683 1303      00117     banksel TXSTA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0036   1518           00118     bsf TXSTA, BRGH ; BRGH = High Speed
+0037   1683 1703      00119     banksel BAUDCTL
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0039   1187           00120     bcf BAUDCTL, BRG16 ; BRG16 = 8-bit Baud Rate Generator is used.
+003A   1683 1303      00121     banksel SPBRGH
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+003C   019A           00122     clrf SPBRGH
+003D   1683 1303      00123     banksel SPBRG
+003F   3081           00124     movlw d'129'        
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0040   0099           00125     movwf SPBRG ; Baudrate 9600
+                      00126     ; Configuro la transmision.
+0041   1683 1303      00127     banksel TXSTA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0043   1698           00128     bsf TXSTA, TXEN  ; Transmit Enable bit = Transmit enabled
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0044   1218           00129     bcf TXSTA, SYNC  ; EUSART mode select bit = Asynchronous mode
+                      00130     ; Configuro la recepcion.
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0045   1283 1303      00131     banksel RCSTA
+0047   1618           00132     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
+0048   1798           00133     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
+0049   1683 1303      00134     banksel PIE1 
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+004B   168C           00135     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
+                      00136 
+                      00137      ; Chequeo inicial de la memoria EEPROM.
+004C   3030           00138     movlw 0x30
+004D   2???           00139     call leer_memoria
+                      00140     ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
+                      00141     ; valor significa que la memoria está inicializada, sino hay que
+                      00142     ; inicializarla.
+004E   3C77           00143     sublw 0x77
+                      00144     ; INICIO IF
+004F   1903           00145         btfsc STATUS, Z
+                      00146         ; THEN (w = 0x77)
+0050   2???           00147         goto $+2
+                      00148         ; ELSE (w <> 0x77)
+0051   2???           00149         call inicializar_eeprom
+                      00150     ; FIN IF   
+                      00151     
+                      00152      ; Configuro el timer1.
+0052   1683 1303      00153     banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0054   140C           00154     bsf PIE1, TMR1IE    
+0055   1283 1303      00155     banksel PIR1
+0057   100C           00156     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+0058   1283 1303      00157     banksel T1CON
+005A   1090           00158     bcf T1CON, TMR1CS ; Timer1 Clock Source Select bit = Clock
+                      00159     ; Configurar preescaler timer1(1:8)
+005B   1610           00160     bsf T1CON, T1CKPS0
+005C   1690           00161     bsf T1CON, T1CKPS1
+005D   1410           00162     bsf T1CON, TMR1ON ; Encender el timer.
+                      00163     ; Reinicio el contador tmr1.
+005E   2???           00164     call re_iniciar_contador1
+                      00165     ; Reinicio el timer1.
+005F   2???           00166     call re_iniciar_timer1
+                      00167         
+0060   0008           00168     return ; configurar_puertos
+                      00169 
+                      00170 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
+                      00171 
+                      00172 ; Lee el contenido del puerto y dervia en un case que indica que letra se
+                      00173 ; ingresó.
+0061                  00174 interrupt_usart
+0061   1283 1303      00175     banksel RCREG
+0063   081A           00176     movf RCREG, w
+0064   2???           00177     call case_letras
+0065   0008           00178     return ; interrupt_usart
+                      00179         
+                      00180 ; Identifica que letra se leyó en el puerto USART.      
+0066                  00181 case_letras
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0066   3A41           00182     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
+0067   1903           00183     btfsc STATUS, Z
+0068   2???           00184     call rutina_letra_A
+                      00185  
+0069   3A09           00186     xorlw b'01001000' ^ b'01000001' ; 0x48 = 'H' (ASCII)
+006A   1903           00187     btfsc STATUS, Z               
+006B   2???           00188     call rutina_letra_H
+                      00189         
+006C   0008           00190     return ; case_letras
+                      00191 
+                      00192 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
+                      00193 ; el puerto usart.
+006D                  00194 rutina_letra_A
+006D   2???           00195     call guardar_contexto_case
+                      00196 
+006E   1283 1303      00197     banksel VALOR_CONVERSION
+0070   0826           00198     movf VALOR_CONVERSION, w
+0071   2???           00199     call enviar_conversion_usart_hexa
+                      00200 
+0072   2???           00201     call cargar_contexto_case
+0073   0008           00202     return ; rutina_letra_A
+                      00203     
+                      00204 ; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
+                      00205 ; envía por el puerto usart.
+0074                  00206 rutina_letra_H
+0074   2???           00207     call guardar_contexto_case
+                      00208     
+                      00209     ; Leo el puntero del buffer actual.
+0075   3031           00210     movlw 0x31
+0076   2???           00211     call leer_memoria
+                      00212     
+                      00213     ; Guardo el valor del puntero actual.
+0077   1283 1303      00214     banksel PUNTERO_ACTUAL
+0079   00AC           00215     movwf PUNTERO_ACTUAL
+                      00216     
+                      00217     ; Guardo el valor inicial de ITERADOR.
+007A   1283 1303      00218     banksel ITERADOR
+007C   00B0           00219     movwf ITERADOR
+                      00220 
+Warning[207]: Found label after column 1. (WhileLoopInicio)
+007D                  00221     WhileLoopInicio
+                      00222         ; Obtengo el dato que apunta ITERADOR.
+007D   1283 1303      00223         banksel ITERADOR
+007F   0830           00224         movf ITERADOR, w
+0080   1283 1703      00225         banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0082   008D           00226         movwf EEADR
+0083   2???           00227         call leer_memoria
+                      00228         
+                      00229         ; Envío el dato (contenido en w) por el puerto usart.
+0084   2???           00230         call enviar_conversion_usart_hexa
+                      00231         ; Envío un salto de linea.
+0085   300A           00232         movlw d'10'
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0086   2???           00233         call enviar_w
+                      00234         
+                      00235         ; Incremento ITERADOR.
+0087   1283 1303      00236         banksel ITERADOR
+0089   03B0           00237         decf ITERADOR, f
+                      00238         ; Chequeo que no me pase el buffer.
+008A   0830           00239         movf ITERADOR, w
+008B   3C3F           00240         sublw 0x3F
+                      00241         ; INICIO IF
+008C   1C03           00242             btfss STATUS, C         
+                      00243             ; THEN (w > 0x3F)
+008D   2???           00244             goto $+3
+                      00245             ; ELSE (w <= 0x3F)
+008E   3049           00246             movlw 0x49
+008F   00B0           00247             movwf ITERADOR
+                      00248         ; FIN IF
+                      00249         
+                      00250         ; Compruebo que no llegue al PUNTERO_ACTUAL (fin del loop)      
+0090   1283 1303      00251         banksel PUNTERO_ACTUAL
+0092   082C           00252         movf PUNTERO_ACTUAL, w
+0093   1283 1303      00253         banksel ITERADOR
+0095   0230           00254         subwf ITERADOR, w
+                      00255         ; INICIO IF
+0096   1903           00256             btfsc STATUS, Z
+                      00257             ; THEN (ITERADOR = PUNTERO_ACTUAL)
+0097   2???           00258             goto $+2 
+                      00259             ; ELSE (ITERADOR <> PUNTERO_ACTUAL)
+0098   2???           00260             goto WhileLoopInicio
+                      00261         ; FIN IF
+0099   2???           00262     call cargar_contexto_case
+                      00263     
+009A   0008           00264     return ; rutina_letra_H
+                      00265         
+                      00266 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
+                      00267 ; usart.
+009B                  00268 enviar_conversion_usart_hexa    
+009B   1283 1303      00269     banksel VALOR_CONVERSION_TEMP
+009D   00A5           00270     movwf VALOR_CONVERSION_TEMP
+                      00271 
+                      00272     ; Obtengo los valores High y Low de la conversion.
+009E   39F0           00273     andlw b'11110000'
+009F   1283 1303      00274     banksel VALOR_CONVERSIONH
+00A1   00A7           00275     movwf VALOR_CONVERSIONH
+00A2   0EA7           00276     swapf VALOR_CONVERSIONH, f  ; Hago swamp para cambiar de lugar y 
+                      00277                                 ; tener todos en los bits menos significativos.
+                      00278     
+00A3   1283 1303      00279     banksel VALOR_CONVERSION_TEMP
+00A5   0825           00280     movf VALOR_CONVERSION_TEMP, w
+00A6   390F           00281     andlw b'00001111'
+00A7   1283 1303      00282     banksel VALOR_CONVERSIONL
+00A9   00A8           00283     movwf VALOR_CONVERSIONL
+                      00284     
+00AA   1283 1303      00285     banksel VALOR_CONVERSIONH
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00AC   0827           00286     movf VALOR_CONVERSIONH, w
+00AD   2???           00287     call mapear_enviar_hexa
+                      00288     
+                      00289     ; Mapeo y envío los valores por el puerto usart.
+00AE   1283 1303      00290     banksel VALOR_CONVERSIONL
+00B0   0828           00291     movf VALOR_CONVERSIONL, w
+00B1   2???           00292     call mapear_enviar_hexa    
+                      00293     
+00B2   0008           00294     return ; enviar_conversion_usart_hexa
+                      00295         
+                      00296 ; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
+00B3                  00297 mapear_enviar_hexa 
+00B3   2???           00298     call mapear_hexa
+00B4   2???           00299     call enviar_w
+00B5   0008           00300     return ; mapear_enviar_hexa
+                      00301         
+                      00302 ; Envia el valor del registro w por el puerto USART.
+00B6                  00303 enviar_w
+00B6   1283 1303      00304     banksel PIR1
+00B8   1E0C           00305     btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
+00B9   2???           00306     goto $-1 ; No, vuelvo a chequear hasta que esté libre.
+00BA   1283 1303      00307     banksel TXREG
+00BC   0099           00308     movwf TXREG 
+00BD   0008           00309     return ; enviar_w
+                      00310         
+                      00311 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
+00BE                  00312 mapear_hexa
+00BE   1283 1303      00313     banksel TEMP_W
+00C0   00AD           00314     movwf TEMP_W
+00C1   3C09           00315     sublw b'00001001' ; 0x09 -> 9 decimal
+                      00316     ; INICIO IF
+00C2   1C03           00317         btfss STATUS, C
+                      00318         ; THEN (w > 9)
+00C3   2???           00319         goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+                      00320         ; ELSE (w <= 9)
+00C4   2???           00321         goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
+                      00322     ; FIN IF
+                      00323 
+                      00324 ; Sumo 30h al valor que tengo en w.
+00C5                  00325 sumar_30
+00C5   1283 1303      00326     banksel TEMP_W
+00C7   082D           00327     movf TEMP_W, w
+00C8   3E30           00328     addlw b'00110000' ; 0x30 -> 48 decimal
+00C9   0008           00329     return ; mapear_hexa
+                      00330 
+                      00331 ; Sumo 37h al valor que tengo en w.
+00CA                  00332 sumar_37
+00CA   1283 1303      00333     banksel TEMP_W
+00CC   082D           00334     movf TEMP_W, w
+00CD   3E37           00335     addlw b'00110111' ; 0x37 -> 55 decimal
+00CE   0008           00336     return ; mapear_hexa
+                      00337         
+                      00338 ; Inicializa la memoria EEPROM.
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00CF                  00339 inicializar_eeprom
+                      00340     ; Inicializo la flag de memoria inicializada.
+                      00341     ; Cargo 0x30 (Puntero flag del buffer)
+00CF   3030           00342     movlw 0x30
+00D0   1283 1703      00343     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00D2   008D           00344     movwf EEADR
+                      00345     ; Cargo el dato que indica que está inicializada la memoria.
+00D3   3077           00346     movlw 0x77
+00D4   1283 1703      00347     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00D6   008C           00348     movwf EEDAT
+                      00349     ; Guardo el valor de w en memoria.
+00D7   2???           00350     call guardar_memoria
+                      00351 
+                      00352     ; Inicializo el puntero inicial del donde arranca el buffer.
+                      00353     ; Cargo 0x31 (SIGUIENTE_PUNTERO)
+00D8   3031           00354     movlw 0x31
+00D9   1283 1703      00355     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00DB   008D           00356     movwf EEADR
+                      00357     ; Cargo el dato que indica que está inicializada la memoria.
+00DC   3049           00358     movlw 0x49
+00DD   1283 1703      00359     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00DF   008C           00360     movwf EEDAT
+                      00361     ; Guardo el valor de w en memoria.
+00E0   2???           00362     call guardar_memoria
+                      00363 
+00E1   0008           00364     return ; inicializar_eeprom
+                      00365 
+                      00366 ; Guarda el valor de VALOR_CONVERSION en el buffer circular.
+00E2                  00367 guardar_memoria_VALOR_CONVERSION
+                      00368     ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
+00E2   2???           00369     call obtener_siguiente_puntero
+                      00370     ; Cargo el dato de VALOR_CONVERSION en EEDAT.
+00E3   1283 1303      00371     banksel VALOR_CONVERSION
+00E5   0826           00372     movf VALOR_CONVERSION, w
+00E6   1283 1703      00373     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00E8   008C           00374     movwf EEDAT
+                      00375     ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+00E9   1283 1303      00376     banksel SIGUIENTE_PUNTERO
+00EB   082B           00377     movf SIGUIENTE_PUNTERO, w
+00EC   1283 1703      00378     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00EE   008D           00379     movwf EEADR
+                      00380     ; Guardo el valor de w en memoria.
+00EF   2???           00381     call guardar_memoria
+                      00382 
+00F0   0008           00383     return ; guardar_memoria_VALOR_CONVERSION
+                      00384 
+                      00385 ; Obtiene y guarda el siguiente puntero del buffer en memoria.  
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00F1                  00386 obtener_siguiente_puntero
+                      00387     ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
+00F1   3031           00388     movlw 0x31
+00F2   1283 1703      00389     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+00F4   008D           00390     movwf EEADR
+                      00391     ; Cargo el valor de memoria en w.
+00F5   2???           00392     call leer_memoria
+                      00393 
+                      00394     ; Sumo 1 al puntero.
+00F6   3E01           00395     addlw d'1'
+00F7   1283 1303      00396     banksel SIGUIENTE_PUNTERO
+00F9   00AB           00397     movwf SIGUIENTE_PUNTERO
+                      00398 
+                      00399     ; Chequeo que no me pase del buffer.
+00FA   3C49           00400     sublw 0x49
+                      00401     ; INICIO IF
+00FB   1803           00402         btfsc STATUS, C
+                      00403         ; THEN (w <= 0x49)
+00FC   2???           00404         goto $+3
+                      00405         ; ELSE (w > 0x49)
+00FD   3040           00406         movlw 0x40
+00FE   00AB           00407         movwf SIGUIENTE_PUNTERO
+                      00408     ; FIN IF
+                      00409 
+                      00410     ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
+00FF   082B           00411     movf SIGUIENTE_PUNTERO, w
+0100   1283 1703      00412     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0102   008C           00413     movwf EEDAT
+                      00414     ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+0103   3031           00415     movlw 0x31
+0104   1283 1703      00416     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0106   008D           00417     movwf EEADR
+                      00418     ; Guardo el valor de w en memoria.
+0107   2???           00419     call guardar_memoria        
+                      00420 
+0108   0008           00421     return ; obtener_siguiente_puntero
+                      00422 
+                      00423 ; Leo un valor ya seteado en EEADR de memoria en w.
+0109                  00424 leer_memoria
+0109   1283 1703      00425     banksel EEADR
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010B   008D           00426     movwf EEADR ; Cargo la dirección.
+                      00427 
+010C   1683 1703      00428     banksel EECON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010E   138C           00429     bcf EECON1, EEPGD ; Apunto a la EEPROM
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+010F   140C           00430     bsf EECON1, RD ; Activo la lectura.
+0110   1283 1703      00431     banksel EEDAT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0112   080C           00432     movf EEDAT, w ; Guardo el valor en w.
+                      00433 
+0113   0008           00434     return ; leer_memoria
+                      00435 
+0114                  00436 guardar_memoria
+0114   1683 1703      00437     banksel EECON1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0116   138C           00438     bcf EECON1, EEPGD ; Apunto a la EEPROM
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0117   150C           00439     bsf EECON1, WREN ; Activo la escritura.
+                      00440 
+0118   138B           00441     bcf INTCON, GIE ; Desactivo interrupciones.
+0119   1B8B           00442     btfsc INTCON, GIE
+011A   2???           00443     goto $-2
+                      00444 
+                      00445     ; SECCION INTOCABLE
+011B   3055           00446     movlw 0x55
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+011C   008D           00447     movwf EECON2
+011D   30AA           00448     movlw 0xAA
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+011E   008D           00449     movwf EECON2
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+011F   148C           00450     bsf EECON1, WR ; Se comienza la escritura.
+                      00451     ; FIN SECCION INTOCABLE
+                      00452 
+0120   178B           00453     bsf INTCON, GIE ; Activo las interrupciones.
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0121   188C           00454     btfsc EECON1, WR
+0122   2???           00455     goto $-1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0123   110C           00456     bcf EECON1, WREN
+0124   0008           00457     return ; guardar_memoria
+                      00458         
+                      00459 ; Configurar CONTADOR_TIMER1
+0125                  00460 re_iniciar_contador1
+0125   1283 1303      00461     banksel CONTADOR_TIMER1
+0127   3064           00462     movlw d'100'
+0128   00AA           00463     movwf CONTADOR_TIMER1
+                      00464 
+0129   0008           00465     return ; re_iniciar_contador1
+                      00466 
+                      00467 ; Rutina de interrupción del tmr1.
+012A                  00468 interrupt_tmr1
+                      00469     ; Decremento el contador.
+012A   1283 1303      00470     banksel CONTADOR_TIMER1
+                      00471     ; INICIO IF
+012C   0BAA           00472             decfsz CONTADOR_TIMER1, f
+                      00473             ; CONTADOR_TIMER <> 0 THEN
+012D   2???           00474             goto $+3
+                      00475             ; ELSE
+012E   2???           00476             call guardar_memoria_VALOR_CONVERSION
+012F   2???           00477             call re_iniciar_contador1
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 11
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00478     ; FIN IF
+0130   2???           00479     call re_iniciar_timer1
+                      00480 
+0131   0008           00481     return ; interrupt_tmr1
+                      00482 
+                      00483 ; Interrupcion de escritura de la eepron.
+0132                  00484 interrupt_eeprom
+0132   1283 1303      00485     banksel PIR2
+0134   120D           00486     bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
+                      00487 
+0135   0008           00488     return ; interrupt_eeprom
+                      00489 
+                      00490 ; Inicia el timer con el valor precargado, para una interrupción cada 100 ms.
+0136                  00491 re_iniciar_timer1
+                      00492 ;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
+                      00493     ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
+                      00494     ; Formula para 100 ms: ValorTimer = 65536 - ((100ms * 20Mhz) / (8 * 4)) = 3036
+                      00495 
+                      00496     ; Cargar 3036 (00001011 11011100)
+0136   1283 1303      00497     banksel PIR1
+                      00498     
+0138   30DC           00499     movlw b'11011100' 
+0139   008E           00500     movwf  TMR1L
+013A   300B           00501     movlw b'00001011' 
+013B   008F           00502     movwf  TMR1H
+                      00503     
+013C   100C           00504     bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+013D   0008           00505     return ; re_iniciar_timer1
+                      00506 
+                      00507 ; Realiza la conversion y almacena los valores en variables.
+013E                  00508 realizar_conversion
+013E   149F           00509     bsf ADCON0, GO ; Start conversion
+013F   189F           00510     btfsc ADCON0, GO ; Is conversion done?
+0140   2???           00511     goto $-1 ; No, test again
+                      00512         
+                      00513     ; Obtener el valor de la conversión.
+0141   1283 1303      00514     banksel ADRESH
+0143   081E           00515     movf ADRESH, w
+0144   1283 1303      00516     banksel VALOR_CONVERSION
+0146   00A6           00517     movwf VALOR_CONVERSION
+                      00518         
+0147   0008           00519     return ; realizar_conversion
+                      00520 
+                      00521 ; Rutinas de contexto.
+0148                  00522 guardar_contexto
+0148   1283 1303      00523     banksel W_TEMP
+014A   00A0           00524     movwf W_TEMP  ; Guardo w.
+014B   0E03           00525     swapf STATUS, w ; Swap status en w.
+014C   00A1           00526     movwf STATUS_TEMP ; Guardo STATUS.
+014D   0008           00527     return ; guardar_contexto
+                      00528         
+014E                  00529 guardar_contexto_case
+014E   1283 1303      00530     banksel W_TEMP_CASE
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 12
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0150   00AF           00531     movwf W_TEMP_CASE  ; Guardo w.
+0151   0E03           00532     swapf STATUS, w ; Swap status en w.
+0152   00AE           00533     movwf STATUS_TEMP_CASE ; Guardo STATUS.
+                      00534 
+0153   0008           00535     return ; guardar_contexto_case
+                      00536     
+0154                  00537 cargar_contexto
+0154   1283 1303      00538     banksel STATUS_TEMP
+0156   0E21           00539     swapf STATUS_TEMP, w
+0157   0083           00540     movwf STATUS
+0158   0EA0           00541     swapf W_TEMP, f
+0159   0E20           00542     swapf W_TEMP, w
+015A   0008           00543     return ; cargar_contexto
+                      00544         
+015B                  00545 cargar_contexto_case
+015B   1283 1303      00546     banksel STATUS_TEMP_CASE
+015D   0E2E           00547     swapf STATUS_TEMP_CASE, w
+015E   0083           00548     movwf STATUS
+015F   0EAF           00549     swapf W_TEMP_CASE, f
+0160   0E2F           00550     swapf W_TEMP_CASE, w
+                      00551 
+0161   0008           00552     return ; cargar_contexto_case
+                      00553 
+Warning[205]: Found directive in column 1. (end)
+20C2 3EFF             00554 end
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ABDEN                             00000000
+ABDOVF                            00000007
+ACKDT                             00000005
+ACKEN                             00000004
+ACKSTAT                           00000006
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADDEN                             00000003
+ADFM                              00000007
+ADIE                              00000006
+ADIF                              00000006
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+ANS0                              00000000
+ANS1                              00000001
+ANS10                             00000002
+ANS11                             00000003
+ANS12                             00000004
+ANS13                             00000005
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANS7                              00000007
+ANS8                              00000000
+ANS9                              00000001
+ANSEL                             00000188
+ANSELH                            00000189
+BAUDCTL                           00000187
+BCLIE                             00000003
+BCLIF                             00000003
+BF                                00000000
+BRG0                              00000000
+BRG1                              00000001
+BRG10                             00000002
+BRG11                             00000003
+BRG12                             00000004
+BRG13                             00000005
+BRG14                             00000006
+BRG15                             00000007
+BRG16                             00000003
+BRG2                              00000002
+BRG3                              00000003
+BRG4                              00000004
+BRG5                              00000005
+BRG6                              00000006
+BRG7                              00000007
+BRG8                              00000000
+BRG9                              00000001
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+BRGH                              00000002
+C                                 00000000
+C1CH0                             00000000
+C1CH1                             00000001
+C1IE                              00000005
+C1IF                              00000005
+C1OE                              00000005
+C1ON                              00000007
+C1OUT                             00000006
+C1POL                             00000004
+C1R                               00000002
+C1RSEL                            00000005
+C1SEN                             00000005
+C2CH0                             00000000
+C2CH1                             00000001
+C2IE                              00000006
+C2IF                              00000006
+C2OE                              00000005
+C2ON                              00000007
+C2OUT                             00000006
+C2POL                             00000004
+C2R                               00000002
+C2REN                             00000004
+C2RSEL                            00000004
+C2SYNC                            00000000
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCP2CON                           0000001D
+CCP2IE                            00000000
+CCP2IF                            00000000
+CCP2M0                            00000000
+CCP2M1                            00000001
+CCP2M2                            00000002
+CCP2M3                            00000003
+CCP2X                             00000005
+CCP2Y                             00000004
+CCPR1                             00000015
+CCPR1H                            00000016
+CCPR1L                            00000015
+CCPR2                             0000001B
+CCPR2H                            0000001C
+CCPR2L                            0000001B
+CHS0                              00000002
+CHS1                              00000003
+CHS2                              00000004
+CHS3                              00000005
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CKE                               00000006
+CKP                               00000004
+CM1CON0                           00000107
+CM2CON0                           00000108
+CM2CON1                           00000109
+CONTADOR_1                        00000022
+CONTADOR_2                        00000023
+CONTADOR_3                        00000024
+CONTADOR_TIMER1                   0000002A
+CREN                              00000004
+CSRC                              00000007
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+DC1B0                             00000004
+DC1B1                             00000005
+DC2B0                             00000004
+DC2B1                             00000005
+DELAY_1MS_CONTADOR_1              00000032
+DELAY_1MS_CONTADOR_2              00000033
+DELAY_CONTADOR                    00000031
+D_A                               00000005
+D_NOT_A                           00000005
+ECCPAS                            0000009C
+ECCPAS0                           00000004
+ECCPAS1                           00000005
+ECCPAS2                           00000006
+ECCPASE                           00000007
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDAT                             0000010C
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FSR                               00000004
+FVREN                             00000000
+GCEN                              00000007
+GIE                               00000007
+GO                                00000001
+GO_DONE                           00000001
+GO_NOT_DONE                       00000001
+HTS                               00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOCB                              00000096
+IOCB0                             00000000
+IOCB1                             00000001
+IOCB2                             00000002
+IOCB3                             00000003
+IOCB4                             00000004
+IOCB5                             00000005
+IOCB6                             00000006
+IOCB7                             00000007
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+ITERADOR                          00000030
+LTS                               00000001
+MC1OUT                            00000007
+MC2OUT                            00000006
+MSK                               00000093
+MSK0                              00000000
+MSK1                              00000001
+MSK2                              00000002
+MSK3                              00000003
+MSK4                              00000004
+MSK5                              00000005
+MSK6                              00000006
+MSK7                              00000007
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000001
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000003
+P                                 00000004
+P1M0                              00000006
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+P1M1                              00000007
+PCL                               00000002
+PCLATH                            0000000A
+PCON                              0000008E
+PDC0                              00000000
+PDC1                              00000001
+PDC2                              00000002
+PDC3                              00000003
+PDC4                              00000004
+PDC5                              00000005
+PDC6                              00000006
+PEIE                              00000006
+PEN                               00000002
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PORTC                             00000007
+PORTD                             00000008
+PORTE                             00000009
+PR2                               00000092
+PRSEN                             00000007
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+PSSAC0                            00000002
+PSSAC1                            00000003
+PSSBD0                            00000000
+PSSBD1                            00000001
+PSTRCON                           0000009D
+PULSR                             00000002
+PULSS                             00000003
+PUNTERO_ACTUAL                    0000002C
+PWM1CON                           0000009B
+R                                 00000002
+RA0                               00000000
+RA1                               00000001
+RA2                               00000002
+RA3                               00000003
+RA4                               00000004
+RA5                               00000005
+RA6                               00000006
+RA7                               00000007
+RB0                               00000000
+RB1                               00000001
+RB2                               00000002
+RB3                               00000003
+RB4                               00000004
+RB5                               00000005
+RB6                               00000006
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 18
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RB7                               00000007
+RBIE                              00000003
+RBIF                              00000000
+RC0                               00000000
+RC1                               00000001
+RC2                               00000002
+RC3                               00000003
+RC4                               00000004
+RC5                               00000005
+RC6                               00000006
+RC7                               00000007
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCEN                              00000003
+RCIDL                             00000006
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+RD0                               00000000
+RD1                               00000001
+RD2                               00000002
+RD3                               00000003
+RD4                               00000004
+RD5                               00000005
+RD6                               00000006
+RD7                               00000007
+RE0                               00000000
+RE1                               00000001
+RE2                               00000002
+RE3                               00000003
+READ_WRITE                        00000002
+RP0                               00000005
+RP1                               00000006
+RSEN                              00000001
+RX9                               00000006
+RX9D                              00000000
+R_NOT_W                           00000002
+R_W                               00000002
+S                                 00000003
+SBOREN                            00000004
+SCKP                              00000004
+SCS                               00000000
+SEN                               00000000
+SENDB                             00000003
+SIGUIENTE_PUNTERO                 0000002B
+SMP                               00000007
+SPBRG                             00000099
+SPBRGH                            0000009A
+SPEN                              00000007
+SR0                               00000006
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 19
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+SR1                               00000007
+SRCON                             00000185
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPCON2                           00000091
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPMSK                            00000093
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATUS                            00000003
+STATUS_TEMP                       00000021
+STATUS_TEMP_CASE                  0000002E
+STRA                              00000000
+STRB                              00000001
+STRC                              00000002
+STRD                              00000003
+STRSYNC                           00000004
+SWDTEN                            00000000
+SYNC                              00000004
+T0CS                              00000005
+T0IE                              00000005
+T0IF                              00000002
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1GINV                            00000007
+T1GIV                             00000007
+T1GSS                             00000001
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1SYNC                            00000002
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TEMP_W                            0000002D
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1                              0000000E
+TMR1CS                            00000001
+TMR1GE                            00000006
+TMR1H                             0000000F
+TMR1IE                            00000000
+TMR1IF                            00000000
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 20
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISA0                            00000000
+TRISA1                            00000001
+TRISA2                            00000002
+TRISA3                            00000003
+TRISA4                            00000004
+TRISA5                            00000005
+TRISA6                            00000006
+TRISA7                            00000007
+TRISB                             00000086
+TRISB0                            00000000
+TRISB1                            00000001
+TRISB2                            00000002
+TRISB3                            00000003
+TRISB4                            00000004
+TRISB5                            00000005
+TRISB6                            00000006
+TRISB7                            00000007
+TRISC                             00000087
+TRISC0                            00000000
+TRISC1                            00000001
+TRISC2                            00000002
+TRISC3                            00000003
+TRISC4                            00000004
+TRISC5                            00000005
+TRISC6                            00000006
+TRISC7                            00000007
+TRISD                             00000088
+TRISD0                            00000000
+TRISD1                            00000001
+TRISD2                            00000002
+TRISD3                            00000003
+TRISD4                            00000004
+TRISD5                            00000005
+TRISD6                            00000006
+TRISD7                            00000007
+TRISE                             00000089
+TRISE0                            00000000
+TRISE1                            00000001
+TRISE2                            00000002
+TRISE3                            00000003
+TRMT                              00000001
+TUN0                              00000000
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 21
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+ULPWUE                            00000005
+ULPWUIE                           00000002
+ULPWUIF                           00000002
+VALOR_CONVERSION                  00000026
+VALOR_CONVERSIONH                 00000027
+VALOR_CONVERSIONL                 00000028
+VALOR_CONVERSION_MEMORIA          00000029
+VALOR_CONVERSION_TEMP             00000025
+VCFG0                             00000004
+VCFG1                             00000005
+VR0                               00000000
+VR1                               00000001
+VR2                               00000002
+VR3                               00000003
+VRCON                             00000097
+VREN                              00000007
+VROE                              00000006
+VRR                               00000005
+VRSS                              00000004
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000105
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WPUB                              00000095
+WPUB0                             00000000
+WPUB1                             00000001
+WPUB2                             00000002
+WPUB3                             00000003
+WPUB4                             00000004
+WPUB5                             00000005
+WPUB6                             00000006
+WPUB7                             00000007
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WUE                               00000001
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 22
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+W_TEMP                            00000020
+W_TEMP_CASE                       0000002F
+WhileLoopInicio                   0000007D
+Z                                 00000002
+_.org_1_000C                      0000000C
+_.org_1_0012                      00000012
+_.org_1_0018                      00000018
+_.org_1_0050                      00000050
+_.org_1_008D                      0000008D
+_.org_1_0097                      00000097
+_.org_1_00B9                      000000B9
+_.org_1_00FC                      000000FC
+_.org_1_011A                      0000011A
+_.org_1_0122                      00000122
+_.org_1_012D                      0000012D
+_.org_1_0140                      00000140
+_BOR21V                           00003EFF
+_BOR40V                           00003FFF
+_BOR4V_BOR21V                     00003EFF
+_BOR4V_BOR40V                     00003FFF
+_BOREN_NSLEEP                     00003EFF
+_BOREN_OFF                        00003CFF
+_BOREN_ON                         00003FFF
+_BOREN_SBODEN                     00003DFF
+_BOR_NSLEEP                       00003EFF
+_BOR_OFF                          00003CFF
+_BOR_ON                           00003FFF
+_BOR_SBODEN                       00003DFF
+_CONFIG1                          00002007
+_CONFIG2                          00002008
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003F7F
+_CP_OFF                           00003FFF
+_CP_ON                            00003FBF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         00001FFF
+_DEVID1                           00002006
+_EC_OSC                           00003FFB
+_EXTRC                            00003FFF
+_EXTRCIO                          00003FFE
+_EXTRC_OSC_CLKOUT                 00003FFF
+_EXTRC_OSC_NOCLKOUT               00003FFE
+_FCMEN_OFF                        000037FF
+_FCMEN_ON                         00003FFF
+_FOSC_EC                          00003FFB
+_FOSC_EXTRC_CLKOUT                00003FFF
+_FOSC_EXTRC_NOCLKOUT              00003FFE
+_FOSC_HS                          00003FFA
+_FOSC_INTRC_CLKOUT                00003FFD
+_FOSC_INTRC_NOCLKOUT              00003FFC
+_FOSC_LP                          00003FF8
+_FOSC_XT                          00003FF9
+_HS_OSC                           00003FFA
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 23
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_IDLOC0                           00002000
+_IDLOC1                           00002001
+_IDLOC2                           00002002
+_IDLOC3                           00002003
+_IESO_OFF                         00003BFF
+_IESO_ON                          00003FFF
+_INTOSC                           00003FFD
+_INTOSCIO                         00003FFC
+_INTRC_OSC_CLKOUT                 00003FFD
+_INTRC_OSC_NOCLKOUT               00003FFC
+_LP_OSC                           00003FF8
+_LVP_OFF                          00002FFF
+_LVP_ON                           00003FFF
+_MCLRE_OFF                        00003FDF
+_MCLRE_ON                         00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FEF
+_WDTE_OFF                         00003FF7
+_WDTE_ON                          00003FFF
+_WDT_OFF                          00003FF7
+_WDT_ON                           00003FFF
+_WRT_1FOURTH                      00003BFF
+_WRT_256                          00003DFF
+_WRT_HALF                         000039FF
+_WRT_OFF                          00003FFF
+_XT_OSC                           00003FF9
+__16F887                          00000001
+cargar_contexto                   00000154
+cargar_contexto_case              0000015B
+case_letras                       00000066
+configuracion_inicial             0000001D
+enviar_conversion_usart_hexa      0000009B
+enviar_w                          000000B6
+guardar_contexto                  00000148
+guardar_contexto_case             0000014E
+guardar_memoria                   00000114
+guardar_memoria_VALOR_CONVERSION  000000E2
+inicializar_eeprom                000000CF
+interrupt                         00000008
+interrupt_eeprom                  00000132
+interrupt_tmr1                    0000012A
+interrupt_usart                   00000061
+leer_memoria                      00000109
+main                              00000005
+mainloop                          00000006
+mapear_enviar_hexa                000000B3
+mapear_hexa                       000000BE
+obtener_siguiente_puntero         000000F1
+re_iniciar_contador1              00000125
+re_iniciar_timer1                 00000136
+realizar_conversion               0000013E
+rutina_letra_A                    0000006D
+rutina_letra_H                    00000074
+MPASM 5.84  OBLIGATORIO - PARTE2 - PROTOCOLO   11-21-2019  18:06:41         PAGE 24
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+sumar_30                          000000C5
+sumar_37                          000000CA
+
+Errors   :     0
+Warnings :     8 reported,     0 suppressed
+Messages :    35 reported,     0 suppressed
+
+
