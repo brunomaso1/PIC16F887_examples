@@ -73,18 +73,13 @@ main
     
 mainloop
     call realizar_conversion
+    call leer_usart
     goto mainloop
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 interrupt
     call guardar_contexto
-
-    banksel PIR1
-    btfss PIR1, RCIF ; Interrupcion usart?
-    goto $+3
-    bcf PIR1, RCIF
-    call interrupt_usart
     
     call cargar_contexto
     retfie ; interrupt
@@ -135,13 +130,22 @@ configuracion_inicial
     banksel RCSTA
     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
-    banksel PIE1 
-    bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
+;    banksel PIE1 
+;    bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
     return ; configurar_puertos
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
 
+leer_usart
+    banksel PIR1
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    call interrupt_usart ; NO ANDA ESTO, SE HARDCODEA.
+    bcf PIR1, RCIF
+    
+    return ; leer_usart
+    
 ; Lee el contenido del puerto y dervia en un case que indica que letra se
 ; ingresó.
 interrupt_usart
@@ -254,7 +258,7 @@ rutina_letra_a
     movf VALOR_CONVERSION, w
     call enviar_conversion_usart_dec
     
-     ; Envío grados centrígrados.
+    ; Envío grados centrígrados.
     movlw d'186' ; °
     call enviar_w
     movlw d'67' ; C

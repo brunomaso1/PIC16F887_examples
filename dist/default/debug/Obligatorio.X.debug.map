@@ -1,12 +1,12 @@
 MPLINK 5.09, LINKER
-Linker Map File - Created Thu Nov 21 17:59:25 2019
+Linker Map File - Created Fri Nov 22 14:07:49 2019
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
                 ---------  ---------  ---------  ---------  ---------
                    .org_0       code   0x000000    program   0x000002
                    .cinit    romdata   0x000001    program   0x000004
-                   .org_1       code   0x000004    program   0x00028e
+                   .org_1       code   0x000004    program   0x00028a
                     dbgP0       code   0x001f00    program   0x0001fe
 .config_2007_BUILD/DEFAULT/DEBUG/OBLIGATORIO        code   0x002007    program   0x000002
 .config_2008_BUILD/DEFAULT/DEBUG/OBLIGATORIO        code   0x002008    program   0x000002
@@ -22,91 +22,93 @@ Linker Map File - Created Thu Nov 21 17:59:25 2019
                                Start         End      
                            ---------   ---------      
                             0x000000    0x000002      
-                            0x000004    0x00014a      
+                            0x000004    0x000148      
                             0x001f00    0x001ffe      
                             0x002007    0x002008      
-            587 out of 8455 program addresses used, program memory utilization is 6%
+            585 out of 8455 program addresses used, program memory utilization is 6%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-             _.org_1_000C   0x00000c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_0072   0x000072    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00B2   0x0000b2    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00B7   0x0000b7    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00F2   0x0000f2    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_0129   0x000129    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-          cargar_contexto   0x00013d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-     cargar_contexto_case   0x000144    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              case_letras   0x000046    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-    configuracion_inicial   0x000011    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      convertir_dec_ascii   0x000104    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      convertir_valor_dec   0x000119    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                  dividir   0x0000db    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-enviar_conversion_usart_dec   0x000093    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-enviar_conversion_usart_hexa   0x000054    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 enviar_w   0x00006f    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-         guardar_contexto   0x000131    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-    guardar_contexto_case   0x000137    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                interrupt   0x000008    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-          interrupt_usart   0x000041    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             loop_dividir   0x0000e0    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                     main   0x000005    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 mainloop   0x000006    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-        mapear_enviar_dec   0x0000f6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-       mapear_enviar_hexa   0x00006c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              mapear_hexa   0x000077    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              multiplicar   0x0000c4    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-         multiplicar_loop   0x0000d0    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      realizar_conversion   0x000127    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-            regla_de_tres   0x0000a7    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           restar_dividir   0x0000ec    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           rutina_letra_A   0x00004d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           rutina_letra_a   0x000088    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 sumar_30   0x00007e    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 sumar_37   0x000083    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
+             _.org_1_003C   0x00003c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_0071   0x000071    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00B1   0x0000b1    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00B6   0x0000b6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00F1   0x0000f1    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_0127   0x000127    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+          cargar_contexto   0x00013b    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+     cargar_contexto_case   0x000142    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              case_letras   0x000045    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+    configuracion_inicial   0x00000c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      convertir_dec_ascii   0x000102    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      convertir_valor_dec   0x000117    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                  dividir   0x0000da    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+enviar_conversion_usart_dec   0x000092    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+enviar_conversion_usart_hexa   0x000053    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 enviar_w   0x00006e    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+         guardar_contexto   0x00012f    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+    guardar_contexto_case   0x000135    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                interrupt   0x000009    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+          interrupt_usart   0x000040    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+               leer_usart   0x000039    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             loop_dividir   0x0000df    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                     main   0x000005    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 mainloop   0x000006    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+        mapear_enviar_dec   0x0000f4    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+       mapear_enviar_hexa   0x00006b    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              mapear_hexa   0x000076    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              multiplicar   0x0000c3    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+         multiplicar_loop   0x0000cf    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      realizar_conversion   0x000125    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+            regla_de_tres   0x0000a6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           restar_dividir   0x0000eb    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           rutina_letra_A   0x00004c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           rutina_letra_a   0x000087    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 sumar_30   0x00007d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 sumar_37   0x000082    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
 
 
 
                               Symbols - Sorted by Address
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-                     main   0x000005    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 mainloop   0x000006    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                interrupt   0x000008    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_000C   0x00000c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-    configuracion_inicial   0x000011    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-          interrupt_usart   0x000041    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              case_letras   0x000046    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           rutina_letra_A   0x00004d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-enviar_conversion_usart_hexa   0x000054    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-       mapear_enviar_hexa   0x00006c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 enviar_w   0x00006f    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_0072   0x000072    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              mapear_hexa   0x000077    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 sumar_30   0x00007e    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                 sumar_37   0x000083    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           rutina_letra_a   0x000088    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-enviar_conversion_usart_dec   0x000093    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-            regla_de_tres   0x0000a7    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00B2   0x0000b2    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00B7   0x0000b7    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-              multiplicar   0x0000c4    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-         multiplicar_loop   0x0000d0    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-                  dividir   0x0000db    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             loop_dividir   0x0000e0    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-           restar_dividir   0x0000ec    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_00F2   0x0000f2    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-        mapear_enviar_dec   0x0000f6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      convertir_dec_ascii   0x000104    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      convertir_valor_dec   0x000119    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-      realizar_conversion   0x000127    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-             _.org_1_0129   0x000129    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-         guardar_contexto   0x000131    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-    guardar_contexto_case   0x000137    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-          cargar_contexto   0x00013d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
-     cargar_contexto_case   0x000144    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura.asm
+                     main   0x000005    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 mainloop   0x000006    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                interrupt   0x000009    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+    configuracion_inicial   0x00000c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+               leer_usart   0x000039    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_003C   0x00003c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+          interrupt_usart   0x000040    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              case_letras   0x000045    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           rutina_letra_A   0x00004c    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+enviar_conversion_usart_hexa   0x000053    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+       mapear_enviar_hexa   0x00006b    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 enviar_w   0x00006e    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_0071   0x000071    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              mapear_hexa   0x000076    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 sumar_30   0x00007d    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                 sumar_37   0x000082    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           rutina_letra_a   0x000087    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+enviar_conversion_usart_dec   0x000092    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+            regla_de_tres   0x0000a6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00B1   0x0000b1    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00B6   0x0000b6    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+              multiplicar   0x0000c3    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+         multiplicar_loop   0x0000cf    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+                  dividir   0x0000da    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             loop_dividir   0x0000df    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+           restar_dividir   0x0000eb    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_00F1   0x0000f1    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+        mapear_enviar_dec   0x0000f4    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      convertir_dec_ascii   0x000102    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      convertir_valor_dec   0x000117    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+      realizar_conversion   0x000125    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+             _.org_1_0127   0x000127    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+         guardar_contexto   0x00012f    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+    guardar_contexto_case   0x000135    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+          cargar_contexto   0x00013b    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
+     cargar_contexto_case   0x000142    program     static C:\Users\bruno.masoller\MPLABXProjects\Obligatorio.X\Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm
 
 

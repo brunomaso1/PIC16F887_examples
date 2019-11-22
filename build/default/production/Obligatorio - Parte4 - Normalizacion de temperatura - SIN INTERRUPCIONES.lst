@@ -1,4 +1,4 @@
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  1
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  1
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -57,7 +57,7 @@ Warning[205]: Found directive in column 1. (cblock)
   00000031            00039     DELAY_CONTADOR ; 0x31
   00000032            00040     DELAY_1MS_CONTADOR_1 ; 0x32
   00000033            00041     DELAY_1MS_CONTADOR_2 ; 0x33
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  2
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  2
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
@@ -102,519 +102,524 @@ Warning[203]: Found opcode in column 1. (goto)
                       00073     
 0006                  00074 mainloop
 0006   2???           00075     call realizar_conversion
-0007   2???           00076     goto mainloop
-                      00077         
-                      00078 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00079 
-0008                  00080 interrupt
-0008   2???           00081     call guardar_contexto
-                      00082 
-0009   1283 1303      00083     banksel PIR1
-000B   1E8C           00084     btfss PIR1, RCIF ; Interrupcion usart?
-000C   2???           00085     goto $+3
-000D   128C           00086     bcf PIR1, RCIF
-000E   2???           00087     call interrupt_usart
-                      00088     
-000F   2???           00089     call cargar_contexto
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  3
+0007   2???           00076     call leer_usart
+0008   2???           00077     goto mainloop
+                      00078         
+                      00079 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00080 
+0009                  00081 interrupt
+0009   2???           00082     call guardar_contexto
+                      00083     
+000A   2???           00084     call cargar_contexto
+000B   0009           00085     retfie ; interrupt
+                      00086         
+                      00087 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                      00088 
+000C                  00089 configuracion_inicial   
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  3
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0010   0009           00090     retfie ; interrupt
-                      00091         
-                      00092 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; CONFIGURACION INICIAL ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                      00093 
-0011                  00094 configuracion_inicial   
-                      00095     ; Configuro las entradas de voltaje analogicas (PUERTOA).
-0011   1683 1303      00096     banksel TRISA
+                      00090     ; Configuro las entradas de voltaje analogicas (PUERTOA).
+000C   1683 1303      00091     banksel TRISA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0013   1405           00097     bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
+000E   1405           00092     bsf TRISA, 0 ; Seteo RA0 como entrada (perilla analogica)
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0014   1485           00098     bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analógica)
-0015   1683 1703      00099     banksel ANSEL
+000F   1485           00093     bsf TRISA, 1 ; Seteo RA1 como entrada (perilla analógica)
+0010   1683 1703      00094     banksel ANSEL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0017   1408           00100     bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
+0012   1408           00095     bsf ANSEL, 0 ; Seto el puerto RA0 como analogico.
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0018   1488           00101     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
-                      00102 
-                      00103     ; Configuracion de la conversión analógica.
-0019   1283 1303      00104     banksel ADRESH
-001B   019E           00105     clrf ADRESH
-001C   1683 1303      00106     banksel ADRESL
+0013   1488           00096     bsf ANSEL, 1 ; Seto el puerto RA1 como analogico.
+                      00097 
+                      00098     ; Configuracion de la conversión analógica.
+0014   1283 1303      00099     banksel ADRESH
+0016   019E           00100     clrf ADRESH
+0017   1683 1303      00101     banksel ADRESL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-001E   019E           00107     clrf ADRESL
-001F   1683 1303      00108     banksel ADCON1
+0019   019E           00102     clrf ADRESL
+001A   1683 1303      00103     banksel ADCON1
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0021   019F           00109     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd     
-                      00110     ; Configuración del reloj y encendido del conversor analogico.
-0022   1283 1303      00111     banksel ADCON0 
-0024   3081           00112     movlw b'10000001'
-0025   009F           00113     movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
-                      00114 
-                      00115     ; Configuro las interrupciones.
-0026   178B           00116     bsf INTCON, GIE ; Global interrupt enable bit.
-0027   170B           00117     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
-                      00118         
-                      00119     ; Configuracion puerto serie (EUSART)
-                      00120     ; Configuracion baudrate
-0028   1683 1303      00121     banksel TXSTA
+001C   019F           00104     clrf ADCON1 ; ADFM = Left justified | VCFG1 = Vss | VCFG0 = Vdd     
+                      00105     ; Configuración del reloj y encendido del conversor analogico.
+001D   1283 1303      00106     banksel ADCON0 
+001F   3081           00107     movlw b'10000001'
+0020   009F           00108     movwf ADCON0 ; ADCS = Fosc/32 (TAD: 1.6(x10^-6)s) | ADON = ADC is enabled.
+                      00109 
+                      00110     ; Configuro las interrupciones.
+0021   178B           00111     bsf INTCON, GIE ; Global interrupt enable bit.
+0022   170B           00112     bsf INTCON, PEIE ; Pheripheral interrupt enable bit.
+                      00113         
+                      00114     ; Configuracion puerto serie (EUSART)
+                      00115     ; Configuracion baudrate
+0023   1683 1303      00116     banksel TXSTA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002A   1518           00122     bsf TXSTA, BRGH ; BRGH = High Speed
-002B   1683 1703      00123     banksel BAUDCTL
+0025   1518           00117     bsf TXSTA, BRGH ; BRGH = High Speed
+0026   1683 1703      00118     banksel BAUDCTL
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-002D   1187           00124     bcf BAUDCTL, BRG16 ; BRG16 = 8-bit Baud Rate Generator is used.
-002E   1683 1303      00125     banksel SPBRGH
+0028   1187           00119     bcf BAUDCTL, BRG16 ; BRG16 = 8-bit Baud Rate Generator is used.
+0029   1683 1303      00120     banksel SPBRGH
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0030   019A           00126     clrf SPBRGH
-0031   1683 1303      00127     banksel SPBRG
-0033   3081           00128     movlw d'129'        
+002B   019A           00121     clrf SPBRGH
+002C   1683 1303      00122     banksel SPBRG
+002E   3081           00123     movlw d'129'        
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0034   0099           00129     movwf SPBRG ; Baudrate 9600
-                      00130     ; Configuro la transmision.
-0035   1683 1303      00131     banksel TXSTA
+002F   0099           00124     movwf SPBRG ; Baudrate 9600
+                      00125     ; Configuro la transmision.
+0030   1683 1303      00126     banksel TXSTA
 Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  4
+0032   1698           00127     bsf TXSTA, TXEN  ; Transmit Enable bit = Transmit enabled
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0033   1218           00128     bcf TXSTA, SYNC  ; EUSART mode select bit = Asynchronous mode
+                      00129     ; Configuro la recepcion.
+0034   1283 1303      00130     banksel RCSTA
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  4
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0037   1698           00132     bsf TXSTA, TXEN  ; Transmit Enable bit = Transmit enabled
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-0038   1218           00133     bcf TXSTA, SYNC  ; EUSART mode select bit = Asynchronous mode
-                      00134     ; Configuro la recepcion.
-0039   1283 1303      00135     banksel RCSTA
-003B   1618           00136     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
-003C   1798           00137     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
-003D   1683 1303      00138     banksel PIE1 
-Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
-003F   168C           00139     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
-                      00140 
-0040   0008           00141     return ; configurar_puertos
-                      00142 
-                      00143 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
-                      00144 
-                      00145 ; Lee el contenido del puerto y dervia en un case que indica que letra se
-                      00146 ; ingresó.
-0041                  00147 interrupt_usart
-0041   1283 1303      00148     banksel RCREG
-0043   081A           00149     movf RCREG, w
-0044   2???           00150     call case_letras
-0045   0008           00151     return ; interrupt_usart
-                      00152         
-                      00153 ; Identifica que letra se leyó en el puerto USART.      
-0046                  00154 case_letras
-0046   3A41           00155     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
-0047   1903           00156     btfsc STATUS, Z
-0048   2???           00157     call rutina_letra_A
-                      00158     
-0049   3A20           00159     xorlw b'01100001' ^ b'01000001' ; 0x61 = 'a' (ASCII)
-004A   1903           00160     btfsc STATUS, Z               
-004B   2???           00161     call rutina_letra_a
-                      00162         
-004C   0008           00163     return ; case_letras
-                      00164 
-                      00165 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
-                      00166 ; el puerto usart.
-004D                  00167 rutina_letra_A
-004D   2???           00168     call guardar_contexto_case
+0036   1618           00131     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
+0037   1798           00132     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
+                      00133 ;    banksel PIE1 
+                      00134 ;    bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
+                      00135 
+0038   0008           00136     return ; configurar_puertos
+                      00137 
+                      00138 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
+                      00139 
+0039                  00140 leer_usart
+0039   1283 1303      00141     banksel PIR1
+003B   1E8C           00142     btfss PIR1, RCIF ; Interrupcion usart?
+003C   2???           00143     goto $+3
+003D   2???           00144     goto interrupt_usart
+Warning[207]: Found label after column 1. (leer_usart1)
+003E                  00145     leer_usart1
+003E   128C           00146     bcf PIR1, RCIF
+                      00147     
+003F   0008           00148     return ; leer_usart
+                      00149     
+                      00150 ; Lee el contenido del puerto y dervia en un case que indica que letra se
+                      00151 ; ingresó.
+0040                  00152 interrupt_usart
+0040   1283 1303      00153     banksel RCREG
+0042   081A           00154     movf RCREG, w
+0043   2???           00155     call case_letras
+0044   2???           00156     goto leer_usart1 ; interrupt_usart
+                      00157         
+                      00158 ; Identifica que letra se leyó en el puerto USART.      
+0045                  00159 case_letras
+0045   3A41           00160     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
+0046   1903           00161     btfsc STATUS, Z
+0047   2???           00162     call rutina_letra_A
+                      00163     
+0048   3A20           00164     xorlw b'01100001' ^ b'01000001' ; 0x61 = 'a' (ASCII)
+0049   1903           00165     btfsc STATUS, Z               
+004A   2???           00166     call rutina_letra_a
+                      00167         
+004B   0008           00168     return ; case_letras
                       00169 
-004E   1283 1303      00170     banksel VALOR_CONVERSION
-0050   0826           00171     movf VALOR_CONVERSION, w
-0051   2???           00172     call enviar_conversion_usart_hexa
-                      00173 
-0052   2???           00174     call cargar_contexto_case
-0053   0008           00175     return ; rutina_letra_A
-                      00176         
-                      00177 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
-                      00178 ; usart.
-0054                  00179 enviar_conversion_usart_hexa    
-0054   1283 1303      00180     banksel VALOR_CONVERSION_TEMP
-0056   00A5           00181     movwf VALOR_CONVERSION_TEMP
-                      00182 
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  5
+                      00170 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
+                      00171 ; el puerto usart.
+004C                  00172 rutina_letra_A
+004C   2???           00173     call guardar_contexto_case
+                      00174 
+004D   1283 1303      00175     banksel VALOR_CONVERSION
+004F   0826           00176     movf VALOR_CONVERSION, w
+0050   2???           00177     call enviar_conversion_usart_hexa
+                      00178 
+0051   2???           00179     call cargar_contexto_case
+0052   0008           00180     return ; rutina_letra_A
+                      00181         
+                      00182 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  5
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00183     ; Obtengo los valores High y Low de la conversion.
-0057   39F0           00184     andlw b'11110000'
-0058   1283 1303      00185     banksel VALOR_CONVERSIONH
-005A   00A7           00186     movwf VALOR_CONVERSIONH
-005B   0EA7           00187     swapf VALOR_CONVERSIONH, f  ; Hago swamp para cambiar de lugar y 
-                      00188                                 ; tener todos en los bits menos significativos.
-                      00189     
-005C   1283 1303      00190     banksel VALOR_CONVERSION_TEMP
-005E   0825           00191     movf VALOR_CONVERSION_TEMP, w
-005F   390F           00192     andlw b'00001111'
-0060   1283 1303      00193     banksel VALOR_CONVERSIONL
-0062   00A8           00194     movwf VALOR_CONVERSIONL
-                      00195     
-0063   1283 1303      00196     banksel VALOR_CONVERSIONH
-0065   0827           00197     movf VALOR_CONVERSIONH, w
-0066   2???           00198     call mapear_enviar_hexa
-                      00199     
-                      00200     ; Mapeo y envío los valores por el puerto usart.
-0067   1283 1303      00201     banksel VALOR_CONVERSIONL
-0069   0828           00202     movf VALOR_CONVERSIONL, w
-006A   2???           00203     call mapear_enviar_hexa    
+                      00183 ; usart.
+0053                  00184 enviar_conversion_usart_hexa    
+0053   1283 1303      00185     banksel VALOR_CONVERSION_TEMP
+0055   00A5           00186     movwf VALOR_CONVERSION_TEMP
+                      00187 
+                      00188     ; Obtengo los valores High y Low de la conversion.
+0056   39F0           00189     andlw b'11110000'
+0057   1283 1303      00190     banksel VALOR_CONVERSIONH
+0059   00A7           00191     movwf VALOR_CONVERSIONH
+005A   0EA7           00192     swapf VALOR_CONVERSIONH, f  ; Hago swamp para cambiar de lugar y 
+                      00193                                 ; tener todos en los bits menos significativos.
+                      00194     
+005B   1283 1303      00195     banksel VALOR_CONVERSION_TEMP
+005D   0825           00196     movf VALOR_CONVERSION_TEMP, w
+005E   390F           00197     andlw b'00001111'
+005F   1283 1303      00198     banksel VALOR_CONVERSIONL
+0061   00A8           00199     movwf VALOR_CONVERSIONL
+                      00200     
+0062   1283 1303      00201     banksel VALOR_CONVERSIONH
+0064   0827           00202     movf VALOR_CONVERSIONH, w
+0065   2???           00203     call mapear_enviar_hexa
                       00204     
-006B   0008           00205     return ; enviar_conversion_usart_hexa
-                      00206         
-                      00207 ; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
-006C                  00208 mapear_enviar_hexa 
-006C   2???           00209     call mapear_hexa
-006D   2???           00210     call enviar_w
-006E   0008           00211     return ; mapear_enviar_hexa
-                      00212         
-                      00213 ; Envia el valor del registro w por el puerto USART.
-006F                  00214 enviar_w
-006F   1283 1303      00215     banksel PIR1
-0071   1E0C           00216     btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
-0072   2???           00217     goto $-1 ; No, vuelvo a chequear hasta que esté libre.
-0073   1283 1303      00218     banksel TXREG
-0075   0099           00219     movwf TXREG 
-0076   0008           00220     return ; enviar_w
-                      00221         
-                      00222 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
-0077                  00223 mapear_hexa
-0077   1283 1303      00224     banksel TEMP_W
-0079   00AD           00225     movwf TEMP_W
-007A   3C09           00226     sublw b'00001001' ; 0x09 -> 9 decimal
-                      00227     ; INICIO IF
-007B   1C03           00228         btfss STATUS, C
-                      00229         ; THEN (w > 9)
-007C   2???           00230         goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
-                      00231         ; ELSE (w <= 9)
-007D   2???           00232         goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
-                      00233     ; FIN IF
-                      00234 
-                      00235 ; Sumo 30h al valor que tengo en w.
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  6
+                      00205     ; Mapeo y envío los valores por el puerto usart.
+0066   1283 1303      00206     banksel VALOR_CONVERSIONL
+0068   0828           00207     movf VALOR_CONVERSIONL, w
+0069   2???           00208     call mapear_enviar_hexa    
+                      00209     
+006A   0008           00210     return ; enviar_conversion_usart_hexa
+                      00211         
+                      00212 ; Mapea el valor de w a un caracter ASCII y lo envía por el puerto USART.
+006B                  00213 mapear_enviar_hexa 
+006B   2???           00214     call mapear_hexa
+006C   2???           00215     call enviar_w
+006D   0008           00216     return ; mapear_enviar_hexa
+                      00217         
+                      00218 ; Envia el valor del registro w por el puerto USART.
+006E                  00219 enviar_w
+006E   1283 1303      00220     banksel PIR1
+0070   1E0C           00221     btfss PIR1, TXIF ; Esta vacío el bus de transmisión?
+0071   2???           00222     goto $-1 ; No, vuelvo a chequear hasta que esté libre.
+0072   1283 1303      00223     banksel TXREG
+0074   0099           00224     movwf TXREG 
+0075   0008           00225     return ; enviar_w
+                      00226         
+                      00227 ; Mapea el valor de w a un caracter ASCII y lo guarda en w.
+0076                  00228 mapear_hexa
+0076   1283 1303      00229     banksel TEMP_W
+0078   00AD           00230     movwf TEMP_W
+0079   3C09           00231     sublw b'00001001' ; 0x09 -> 9 decimal
+                      00232     ; INICIO IF
+007A   1C03           00233         btfss STATUS, C
+                      00234         ; THEN (w > 9)
+007B   2???           00235         goto sumar_37 ; Es mayor a 9, entonces sumo 0x37 = 0011 0111
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  6
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-007E                  00236 sumar_30
-007E   1283 1303      00237     banksel TEMP_W
-0080   082D           00238     movf TEMP_W, w
-0081   3E30           00239     addlw b'00110000' ; 0x30 -> 48 decimal
-0082   0008           00240     return ; mapear_hexa
-                      00241 
-                      00242 ; Sumo 37h al valor que tengo en w.
-0083                  00243 sumar_37
-0083   1283 1303      00244     banksel TEMP_W
-0085   082D           00245     movf TEMP_W, w
-0086   3E37           00246     addlw b'00110111' ; 0x37 -> 55 decimal
-0087   0008           00247     return ; mapear_hexa
-                      00248 
-                      00249 ; Manda la conversion en formato decimal.
-0088                  00250 rutina_letra_a
-0088   2???           00251     call guardar_contexto_case
-                      00252     
-0089   1283 1303      00253     banksel VALOR_CONVERSION
-008B   0826           00254     movf VALOR_CONVERSION, w
-008C   2???           00255     call enviar_conversion_usart_dec
-                      00256     
-                      00257      ; Envío grados centrígrados.
-008D   30BA           00258     movlw d'186' ; °
-008E   2???           00259     call enviar_w
-008F   3043           00260     movlw d'67' ; C
-0090   2???           00261     call enviar_w    
-                      00262    
-0091   2???           00263     call cargar_contexto_case
-                      00264     
-0092   0008           00265     return ; rutina_letra_a
-                      00266         
-                      00267 ; Obtiene el valor de la conversion en w, lo mapea a decimal y lo envía por el
-                      00268 ; puerto usart.
-0093                  00269 enviar_conversion_usart_dec
-0093   1283 1303      00270     banksel VALOR_CONVERSION_TEMP
-0095   00A5           00271     movwf VALOR_CONVERSION_TEMP
-                      00272     
-0096   1283 1303      00273     banksel MULTIPLICANDO_REGLA
-0098   3064           00274     movlw d'100'
-0099   00B4           00275     movwf MULTIPLICANDO_REGLA
-                      00276     
-009A   1283 1303      00277     banksel DIVISOR_REGLA
-009C   30FF           00278     movlw d'255'
-009D   00B5           00279     movwf DIVISOR_REGLA
-                      00280  
-009E   1283 1303      00281     banksel VALOR_CONVERSION_TEMP
-00A0   0825           00282     movf VALOR_CONVERSION_TEMP, w
-                      00283     
-00A1   2???           00284     call regla_de_tres
-                      00285     
-00A2   1283 1303      00286     banksel REGLAE
-00A4   0836           00287     movf REGLAE, w
-00A5   2???           00288     call mapear_enviar_dec
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  7
+                      00236         ; ELSE (w <= 9)
+007C   2???           00237         goto sumar_30 ; Es menor o igual 9, entonces sumo 0x30 = 0011 0000
+                      00238     ; FIN IF
+                      00239 
+                      00240 ; Sumo 30h al valor que tengo en w.
+007D                  00241 sumar_30
+007D   1283 1303      00242     banksel TEMP_W
+007F   082D           00243     movf TEMP_W, w
+0080   3E30           00244     addlw b'00110000' ; 0x30 -> 48 decimal
+0081   0008           00245     return ; mapear_hexa
+                      00246 
+                      00247 ; Sumo 37h al valor que tengo en w.
+0082                  00248 sumar_37
+0082   1283 1303      00249     banksel TEMP_W
+0084   082D           00250     movf TEMP_W, w
+0085   3E37           00251     addlw b'00110111' ; 0x37 -> 55 decimal
+0086   0008           00252     return ; mapear_hexa
+                      00253 
+                      00254 ; Manda la conversion en formato decimal.
+0087                  00255 rutina_letra_a
+0087   2???           00256     call guardar_contexto_case
+                      00257     
+0088   1283 1303      00258     banksel VALOR_CONVERSION
+008A   0826           00259     movf VALOR_CONVERSION, w
+008B   2???           00260     call enviar_conversion_usart_dec
+                      00261     
+                      00262     ; Envío grados centrígrados.
+008C   30BA           00263     movlw d'186' ; °
+008D   2???           00264     call enviar_w
+008E   3043           00265     movlw d'67' ; C
+008F   2???           00266     call enviar_w    
+                      00267    
+0090   2???           00268     call cargar_contexto_case
+                      00269     
+0091   0008           00270     return ; rutina_letra_a
+                      00271         
+                      00272 ; Obtiene el valor de la conversion en w, lo mapea a decimal y lo envía por el
+                      00273 ; puerto usart.
+0092                  00274 enviar_conversion_usart_dec
+0092   1283 1303      00275     banksel VALOR_CONVERSION_TEMP
+0094   00A5           00276     movwf VALOR_CONVERSION_TEMP
+                      00277     
+0095   1283 1303      00278     banksel MULTIPLICANDO_REGLA
+0097   3064           00279     movlw d'100'
+0098   00B4           00280     movwf MULTIPLICANDO_REGLA
+                      00281     
+0099   1283 1303      00282     banksel DIVISOR_REGLA
+009B   30FF           00283     movlw d'255'
+009C   00B5           00284     movwf DIVISOR_REGLA
+                      00285  
+009D   1283 1303      00286     banksel VALOR_CONVERSION_TEMP
+009F   0825           00287     movf VALOR_CONVERSION_TEMP, w
+                      00288     
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  7
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00289     
-00A6   0008           00290     return ; enviar_conversion_usart_dec
-                      00291 
-                      00292 ; Realiza una regla de tres.
-                      00293 ; w = w*MULTIPLICANDO_REGLA/DIVISOR_REGLA
-00A7                  00294 regla_de_tres
-00A7   1283 1303      00295     banksel VALOR_CONVERSION_REGLA
-00A9   00B8           00296     movwf VALOR_CONVERSION_REGLA
-00AA   0834           00297     movf MULTIPLICANDO_REGLA, w
-00AB   00B9           00298     movwf MULTIPLICANDO
-00AC   0838           00299     movf VALOR_CONVERSION_REGLA, w
-00AD   2???           00300     call multiplicar
-                      00301     
-                      00302     ; Si la multiplicación dio 0, devuelvo 0.
-00AE   1283 1303      00303     banksel PRODH
-00B0   08BA           00304     movf PRODH, f
-                      00305     ; INICIO IF
-00B1   1D03           00306         btfss STATUS, Z
-                      00307         ; THEN (PRODH <> 0)
-00B2   2???           00308         goto $+7
-                      00309         ; ELSE (PRODH = 0)
-00B3   1283 1303      00310         banksel PRODL
-00B5   08BB           00311         movf PRODL, f
-                      00312         ; INICIO IF
-00B6   1D03           00313             btfss STATUS, Z
-                      00314             ; THEN (PRODL <> 0)
-00B7   2???           00315             goto $+2
-                      00316             ; ELSE (PRODL = 0)
-00B8   3400           00317             retlw 0 ; Si es 0 el producto, devuelvo 0 porque no puedo dividir.
-                      00318         ; FIN IF
-                      00319     ; FIN IF
-                      00320     
-                      00321     ; LOS PARAMETROS DE dividir YA ESTAN CARGADOS, CARGO SOLO w.
-00B9   1283 1303      00322     banksel DIVISOR_REGLA
-00BB   0835           00323     movf DIVISOR_REGLA, w
-00BC   2???           00324     call dividir
+00A0   2???           00289     call regla_de_tres
+                      00290     
+00A1   1283 1303      00291     banksel REGLAE
+00A3   0836           00292     movf REGLAE, w
+00A4   2???           00293     call mapear_enviar_dec
+                      00294     
+00A5   0008           00295     return ; enviar_conversion_usart_dec
+                      00296 
+                      00297 ; Realiza una regla de tres.
+                      00298 ; w = w*MULTIPLICANDO_REGLA/DIVISOR_REGLA
+00A6                  00299 regla_de_tres
+00A6   1283 1303      00300     banksel VALOR_CONVERSION_REGLA
+00A8   00B8           00301     movwf VALOR_CONVERSION_REGLA
+00A9   0834           00302     movf MULTIPLICANDO_REGLA, w
+00AA   00B9           00303     movwf MULTIPLICANDO
+00AB   0838           00304     movf VALOR_CONVERSION_REGLA, w
+00AC   2???           00305     call multiplicar
+                      00306     
+                      00307     ; Si la multiplicación dio 0, devuelvo 0.
+00AD   1283 1303      00308     banksel PRODH
+00AF   08BA           00309     movf PRODH, f
+                      00310     ; INICIO IF
+00B0   1D03           00311         btfss STATUS, Z
+                      00312         ; THEN (PRODH <> 0)
+00B1   2???           00313         goto $+7
+                      00314         ; ELSE (PRODH = 0)
+00B2   1283 1303      00315         banksel PRODL
+00B4   08BB           00316         movf PRODL, f
+                      00317         ; INICIO IF
+00B5   1D03           00318             btfss STATUS, Z
+                      00319             ; THEN (PRODL <> 0)
+00B6   2???           00320             goto $+2
+                      00321             ; ELSE (PRODL = 0)
+00B7   3400           00322             retlw 0 ; Si es 0 el producto, devuelvo 0 porque no puedo dividir.
+                      00323         ; FIN IF
+                      00324     ; FIN IF
                       00325     
-00BD   1283 1303      00326     banksel COCIENTE
-00BF   083C           00327     movf COCIENTE, w
-00C0   00B6           00328     movwf REGLAE
-00C1   083D           00329     movf RESTO, w
-00C2   00B7           00330     movwf REGLAF    
-                      00331     
-00C3   0008           00332     return ; regla_de_tres
-                      00333 
-                      00334 ; Multiplica dos numeros.
-                      00335 ; MULTIPLICANDO * w = PRODH:PRODL
-00C4                  00336 multiplicar
-00C4   1283 1303      00337     banksel MULT
-00C6   00BE           00338     movwf MULT
-                      00339     
-                      00340     ; Limpio los resultados.
-00C7   1283 1303      00341     banksel PRODL
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  8
+                      00326     ; LOS PARAMETROS DE dividir YA ESTAN CARGADOS, CARGO SOLO w.
+00B8   1283 1303      00327     banksel DIVISOR_REGLA
+00BA   0835           00328     movf DIVISOR_REGLA, w
+00BB   2???           00329     call dividir
+                      00330     
+00BC   1283 1303      00331     banksel COCIENTE
+00BE   083C           00332     movf COCIENTE, w
+00BF   00B6           00333     movwf REGLAE
+00C0   083D           00334     movf RESTO, w
+00C1   00B7           00335     movwf REGLAF    
+                      00336     
+00C2   0008           00337     return ; regla_de_tres
+                      00338 
+                      00339 ; Multiplica dos numeros.
+                      00340 ; MULTIPLICANDO * w = PRODH:PRODL
+00C3                  00341 multiplicar
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  8
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-00C9   01BB           00342     clrf PRODL
-00CA   01BA           00343     clrf PRODH
+00C3   1283 1303      00342     banksel MULT
+00C5   00BE           00343     movwf MULT
                       00344     
-00CB   1283 1303      00345     banksel MULTIPLICANDO
-00CD   08B9           00346     movf MULTIPLICANDO, f
-                      00347     ; INICIO IF
-00CE   1903           00348         btfsc STATUS, Z
-                      00349         ; THEN (MULTIPLICANDO = 0)
-00CF   0008           00350         return
-                      00351         ; ELSE (MULTIPLICANDO <> 0)
+                      00345     ; Limpio los resultados.
+00C6   1283 1303      00346     banksel PRODL
+00C8   01BB           00347     clrf PRODL
+00C9   01BA           00348     clrf PRODH
+                      00349     
+00CA   1283 1303      00350     banksel MULTIPLICANDO
+00CC   08B9           00351     movf MULTIPLICANDO, f
+                      00352     ; INICIO IF
+00CD   1903           00353         btfsc STATUS, Z
+                      00354         ; THEN (MULTIPLICANDO = 0)
+00CE   0008           00355         return
+                      00356         ; ELSE (MULTIPLICANDO <> 0)
 Warning[207]: Found label after column 1. (multiplicar_loop)
-00D0                  00352         multiplicar_loop
-00D0   1283 1303      00353             banksel MULT
-00D2   083E           00354             movf MULT, w
-00D3   1283 1303      00355             banksel PRODL
-00D5   07BB           00356             addwf PRODL, f
-00D6   1803           00357             btfsc STATUS, C
-00D7   0ABA           00358             incf PRODH, f
-00D8   0BB9           00359             decfsz MULTIPLICANDO, f
-00D9   2???           00360             goto multiplicar_loop           
-                      00361     ; FIN IF
-00DA   0008           00362     return ; multiplicar
-                      00363 
-                      00364 ; Divide dos numeros.
-                      00365 ; PRODH:PRODL/w = w*COCIENTE + RESTO
-00DB                  00366 dividir
-00DB   1283 1303      00367     banksel COCIENTE
-00DD   01BC           00368     clrf COCIENTE
-00DE   01BD           00369     clrf RESTO
-00DF   00BF           00370     movwf DIVIDENDO
-                      00371     
+00CF                  00357         multiplicar_loop
+00CF   1283 1303      00358             banksel MULT
+00D1   083E           00359             movf MULT, w
+00D2   1283 1303      00360             banksel PRODL
+00D4   07BB           00361             addwf PRODL, f
+00D5   1803           00362             btfsc STATUS, C
+00D6   0ABA           00363             incf PRODH, f
+00D7   0BB9           00364             decfsz MULTIPLICANDO, f
+00D8   2???           00365             goto multiplicar_loop           
+                      00366     ; FIN IF
+00D9   0008           00367     return ; multiplicar
+                      00368 
+                      00369 ; Divide dos numeros.
+                      00370 ; PRODH:PRODL/w = w*COCIENTE + RESTO
+00DA                  00371 dividir
+00DA   1283 1303      00372     banksel COCIENTE
+00DC   01BC           00373     clrf COCIENTE
+00DD   01BD           00374     clrf RESTO
+00DE   00BF           00375     movwf DIVIDENDO
+                      00376     
 Warning[207]: Found label after column 1. (loop_dividir)
-00E0                  00372     loop_dividir
-00E0   1283 1303      00373         banksel PRODH
-00E2   08BA           00374         movf PRODH, f
-                      00375         ; INICIO IF
-00E3   1D03           00376             btfss STATUS, Z
-                      00377             ; THEN (PRODH <> 0)
-00E4   2???           00378             goto restar_dividir
-                      00379             ; ELSE (PRODH = 0)
-00E5   083F           00380             movf DIVIDENDO, w
-00E6   023B           00381             subwf PRODL, w
-                      00382             ; INICIO IF
-00E7   1803           00383                 btfsc STATUS, C
-                      00384                 ; THEN (PRODL >= DIVIDENDO)
-00E8   2???           00385                 goto restar_dividir
-                      00386                 ; ELSE (PRODL < DIVIDENDO)
-00E9   083B           00387                 movf PRODL, w
-00EA   00BD           00388                 movwf RESTO
-00EB   0008           00389                 return ; dividir
-                      00390             ; FIN IF
-                      00391         ; FIN IF
-                      00392         
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE  9
+00DF                  00377     loop_dividir
+00DF   1283 1303      00378         banksel PRODH
+00E1   08BA           00379         movf PRODH, f
+                      00380         ; INICIO IF
+00E2   1D03           00381             btfss STATUS, Z
+                      00382             ; THEN (PRODH <> 0)
+00E3   2???           00383             goto restar_dividir
+                      00384             ; ELSE (PRODH = 0)
+00E4   083F           00385             movf DIVIDENDO, w
+00E5   023B           00386             subwf PRODL, w
+                      00387             ; INICIO IF
+00E6   1803           00388                 btfsc STATUS, C
+                      00389                 ; THEN (PRODL >= DIVIDENDO)
+00E7   2???           00390                 goto restar_dividir
+                      00391                 ; ELSE (PRODL < DIVIDENDO)
+00E8   083B           00392                 movf PRODL, w
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE  9
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
+00E9   00BD           00393                 movwf RESTO
+00EA   0008           00394                 return ; dividir
+                      00395             ; FIN IF
+                      00396         ; FIN IF
+                      00397         
 Warning[207]: Found label after column 1. (restar_dividir)
-00EC                  00393         restar_dividir
-00EC   1283 1303      00394             banksel COCIENTE
-00EE   0ABC           00395             incf COCIENTE, f
-                      00396             
-00EF   083F           00397             movf DIVIDENDO, w
-00F0   02BB           00398             subwf PRODL, f
-                      00399             ; INICIO IF
-00F1   1803           00400                 btfsc STATUS, C
-                      00401                 ; THEN (PRODL < DIVIDENDO)
-00F2   2???           00402                 goto $+2
-                      00403                 ; ELSE (PRODL >= DIVIDENDO)
-00F3   03BA           00404                 decf PRODH, f
-00F4   2???           00405             goto loop_dividir
-                      00406 
-                      00407 ; Mapea y envía un valor decimal por el puerto usart.
-00F5                  00408 mapear_enviar_dec
-00F5   2???           00409     call convertir_dec_ascii
-                      00410     
-00F6   1283 1303      00411     banksel ASCII1
-00F8   0840           00412     movf ASCII1, w
-00F9   2???           00413     call enviar_w
-                      00414     
-00FA   1283 1303      00415     banksel ASCII2
-00FC   0841           00416     movf ASCII2, w
-00FD   2???           00417     call enviar_w
-                      00418     
-00FE   1283 1303      00419     banksel ASCII3
-0100   0842           00420     movf ASCII3, w
-0101   2???           00421     call enviar_w   
-                      00422     
-0102   0008           00423     return ; mapear_enviar_dec
-                      00424 
-                      00425 ; Convierte el valor numerico de w en ASCII.
-                      00426 ; w = ASCII3 ASCII2 ASCII1
-0103                  00427 convertir_dec_ascii    
-0103   2???           00428     call convertir_valor_dec
-0104   1283 1303      00429     banksel ASCII_TEMP
-0106   00C3           00430     movwf ASCII_TEMP
-0107   0844           00431     movf ASCII_CONVERSION, w
-0108   00C2           00432     movwf ASCII3 ; Almaceno el resultado
-                      00433     
-0109   0843           00434     movf ASCII_TEMP, w
-010A   2???           00435     call convertir_valor_dec
-010B   1283 1303      00436     banksel ASCII_TEMP
-010D   00C3           00437     movwf ASCII_TEMP
-010E   0844           00438     movf ASCII_CONVERSION, w
-010F   00C1           00439     movwf ASCII2 ; Almaceno el resultado
-                      00440     
-0110   0843           00441     movf ASCII_TEMP, w
-0111   2???           00442     call convertir_valor_dec
-0112   1283 1303      00443     banksel ASCII_TEMP
-0114   00C3           00444     movwf ASCII_TEMP
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 10
+00EB                  00398         restar_dividir
+00EB   1283 1303      00399             banksel COCIENTE
+00ED   0ABC           00400             incf COCIENTE, f
+                      00401             
+00EE   083F           00402             movf DIVIDENDO, w
+00EF   02BB           00403             subwf PRODL, f
+                      00404             ; INICIO IF
+00F0   1803           00405                 btfsc STATUS, C
+                      00406                 ; THEN (PRODL < DIVIDENDO)
+00F1   2???           00407                 goto $+2
+                      00408                 ; ELSE (PRODL >= DIVIDENDO)
+00F2   03BA           00409                 decf PRODH, f
+00F3   2???           00410             goto loop_dividir
+                      00411 
+                      00412 ; Mapea y envía un valor decimal por el puerto usart.
+00F4                  00413 mapear_enviar_dec
+00F4   2???           00414     call convertir_dec_ascii
+                      00415     
+00F5   1283 1303      00416     banksel ASCII1
+00F7   0840           00417     movf ASCII1, w
+00F8   2???           00418     call enviar_w
+                      00419     
+00F9   1283 1303      00420     banksel ASCII2
+00FB   0841           00421     movf ASCII2, w
+00FC   2???           00422     call enviar_w
+                      00423     
+00FD   1283 1303      00424     banksel ASCII3
+00FF   0842           00425     movf ASCII3, w
+0100   2???           00426     call enviar_w   
+                      00427     
+0101   0008           00428     return ; mapear_enviar_dec
+                      00429 
+                      00430 ; Convierte el valor numerico de w en ASCII.
+                      00431 ; w = ASCII3 ASCII2 ASCII1
+0102                  00432 convertir_dec_ascii    
+0102   2???           00433     call convertir_valor_dec
+0103   1283 1303      00434     banksel ASCII_TEMP
+0105   00C3           00435     movwf ASCII_TEMP
+0106   0844           00436     movf ASCII_CONVERSION, w
+0107   00C2           00437     movwf ASCII3 ; Almaceno el resultado
+                      00438     
+0108   0843           00439     movf ASCII_TEMP, w
+0109   2???           00440     call convertir_valor_dec
+010A   1283 1303      00441     banksel ASCII_TEMP
+010C   00C3           00442     movwf ASCII_TEMP
+010D   0844           00443     movf ASCII_CONVERSION, w
+010E   00C1           00444     movwf ASCII2 ; Almaceno el resultado
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 10
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-0115   0844           00445     movf ASCII_CONVERSION, w
-0116   00C0           00446     movwf ASCII1 ; Almaceno el resultado
-                      00447     
-0117   0008           00448     return ; convertir_dec_ascii
-                      00449    
-                      00450 ; Convierte solo una parte del valor en w.
-                      00451 ; ASCII_CONVERSION = w MOD DIVISOR
-                      00452 ; w = w/DIVISOR
-0118                  00453 convertir_valor_dec
-0118   1283 1303      00454     banksel PRODL
-011A   00BB           00455     movwf PRODL
-011B   300A           00456     movlw d'10'
-011C   2???           00457     call dividir
-                      00458     
-011D   1283 1303      00459     banksel RESTO
-011F   083D           00460     movf RESTO, w    
-0120   3E30           00461     addlw b'00110000' ; Sumo 30.
-0121   00C4           00462     movwf ASCII_CONVERSION ; Almaceno el resultado
+                      00445     
+010F   0843           00446     movf ASCII_TEMP, w
+0110   2???           00447     call convertir_valor_dec
+0111   1283 1303      00448     banksel ASCII_TEMP
+0113   00C3           00449     movwf ASCII_TEMP
+0114   0844           00450     movf ASCII_CONVERSION, w
+0115   00C0           00451     movwf ASCII1 ; Almaceno el resultado
+                      00452     
+0116   0008           00453     return ; convertir_dec_ascii
+                      00454    
+                      00455 ; Convierte solo una parte del valor en w.
+                      00456 ; ASCII_CONVERSION = w MOD DIVISOR
+                      00457 ; w = w/DIVISOR
+0117                  00458 convertir_valor_dec
+0117   1283 1303      00459     banksel PRODL
+0119   00BB           00460     movwf PRODL
+011A   300A           00461     movlw d'10'
+011B   2???           00462     call dividir
                       00463     
-0122   1283 1303      00464     banksel COCIENTE
-0124   083C           00465     movf COCIENTE, w
-                      00466     
-0125   0008           00467     return ; convertir_valor_dec
+011C   1283 1303      00464     banksel RESTO
+011E   083D           00465     movf RESTO, w    
+011F   3E30           00466     addlw b'00110000' ; Sumo 30.
+0120   00C4           00467     movwf ASCII_CONVERSION ; Almaceno el resultado
                       00468     
-                      00469 ; Realiza la conversion y almacena los valores en variables.
-0126                  00470 realizar_conversion
-0126   149F           00471     bsf ADCON0, GO ; Start conversion
-0127   189F           00472     btfsc ADCON0, GO ; Is conversion done?
-0128   2???           00473     goto $-1 ; No, test again
-                      00474         
-                      00475     ; Obtener el valor de la conversión.
-0129   1283 1303      00476     banksel ADRESH
-012B   081E           00477     movf ADRESH, w
-012C   1283 1303      00478     banksel VALOR_CONVERSION
-012E   00A6           00479     movwf VALOR_CONVERSION
-                      00480         
-012F   0008           00481     return ; realizar_conversion
-                      00482 
-                      00483 ; Rutinas de contexto.
-0130                  00484 guardar_contexto
-0130   1283 1303      00485     banksel W_TEMP
-0132   00A0           00486     movwf W_TEMP  ; Guardo w.
-0133   0E03           00487     swapf STATUS, w ; Swap status en w.
-0134   00A1           00488     movwf STATUS_TEMP ; Guardo STATUS.
-0135   0008           00489     return ; guardar_contexto
-                      00490         
-0136                  00491 guardar_contexto_case
-0136   1283 1303      00492     banksel W_TEMP_CASE
-0138   00AF           00493     movwf W_TEMP_CASE  ; Guardo w.
-0139   0E03           00494     swapf STATUS, w ; Swap status en w.
-013A   00AE           00495     movwf STATUS_TEMP_CASE ; Guardo STATUS.
-                      00496 
-013B   0008           00497     return ; guardar_contexto_case
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 11
+0121   1283 1303      00469     banksel COCIENTE
+0123   083C           00470     movf COCIENTE, w
+                      00471     
+0124   0008           00472     return ; convertir_valor_dec
+                      00473     
+                      00474 ; Realiza la conversion y almacena los valores en variables.
+0125                  00475 realizar_conversion
+0125   149F           00476     bsf ADCON0, GO ; Start conversion
+0126   189F           00477     btfsc ADCON0, GO ; Is conversion done?
+0127   2???           00478     goto $-1 ; No, test again
+                      00479         
+                      00480     ; Obtener el valor de la conversión.
+0128   1283 1303      00481     banksel ADRESH
+012A   081E           00482     movf ADRESH, w
+012B   1283 1303      00483     banksel VALOR_CONVERSION
+012D   00A6           00484     movwf VALOR_CONVERSION
+                      00485         
+012E   0008           00486     return ; realizar_conversion
+                      00487 
+                      00488 ; Rutinas de contexto.
+012F                  00489 guardar_contexto
+012F   1283 1303      00490     banksel W_TEMP
+0131   00A0           00491     movwf W_TEMP  ; Guardo w.
+0132   0E03           00492     swapf STATUS, w ; Swap status en w.
+0133   00A1           00493     movwf STATUS_TEMP ; Guardo STATUS.
+0134   0008           00494     return ; guardar_contexto
+                      00495         
+0135                  00496 guardar_contexto_case
+0135   1283 1303      00497     banksel W_TEMP_CASE
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 11
 
 
 LOC  OBJECT CODE     LINE SOURCE TEXT
   VALUE
 
-                      00498     
-013C                  00499 cargar_contexto
-013C   1283 1303      00500     banksel STATUS_TEMP
-013E   0E21           00501     swapf STATUS_TEMP, w
-013F   0083           00502     movwf STATUS
-0140   0EA0           00503     swapf W_TEMP, f
-0141   0E20           00504     swapf W_TEMP, w
-0142   0008           00505     return ; cargar_contexto
-                      00506         
-0143                  00507 cargar_contexto_case
-0143   1283 1303      00508     banksel STATUS_TEMP_CASE
-0145   0E2E           00509     swapf STATUS_TEMP_CASE, w
-0146   0083           00510     movwf STATUS
-0147   0EAF           00511     swapf W_TEMP_CASE, f
-0148   0E2F           00512     swapf W_TEMP_CASE, w
-                      00513 
-0149   0008           00514     return ; cargar_contexto_case
-                      00515 
+0137   00AF           00498     movwf W_TEMP_CASE  ; Guardo w.
+0138   0E03           00499     swapf STATUS, w ; Swap status en w.
+0139   00AE           00500     movwf STATUS_TEMP_CASE ; Guardo STATUS.
+                      00501 
+013A   0008           00502     return ; guardar_contexto_case
+                      00503     
+013B                  00504 cargar_contexto
+013B   1283 1303      00505     banksel STATUS_TEMP
+013D   0E21           00506     swapf STATUS_TEMP, w
+013E   0083           00507     movwf STATUS
+013F   0EA0           00508     swapf W_TEMP, f
+0140   0E20           00509     swapf W_TEMP, w
+0141   0008           00510     return ; cargar_contexto
+                      00511         
+0142                  00512 cargar_contexto_case
+0142   1283 1303      00513     banksel STATUS_TEMP_CASE
+0144   0E2E           00514     swapf STATUS_TEMP_CASE, w
+0145   0083           00515     movwf STATUS
+0146   0EAF           00516     swapf W_TEMP_CASE, f
+0147   0E2F           00517     swapf W_TEMP_CASE, w
+                      00518 
+0148   0008           00519     return ; cargar_contexto_case
+                      00520 
 Warning[205]: Found directive in column 1. (end)
-20C2 3EFF             00516 end
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 12
+20C2 3EFF             00521 end
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 12
 
 
 SYMBOL TABLE
@@ -673,7 +678,7 @@ BRG16                             00000003
 BRG2                              00000002
 BRG3                              00000003
 BRG4                              00000004
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 13
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 13
 
 
 SYMBOL TABLE
@@ -732,7 +737,7 @@ CCPR1H                            00000016
 CCPR1L                            00000015
 CCPR2                             0000001B
 CCPR2H                            0000001C
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 14
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 14
 
 
 SYMBOL TABLE
@@ -791,7 +796,7 @@ FVREN                             00000000
 GCEN                              00000007
 GIE                               00000007
 GO                                00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 15
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 15
 
 
 SYMBOL TABLE
@@ -850,7 +855,7 @@ NOT_RC8                           00000006
 NOT_T1SYNC                        00000002
 NOT_TO                            00000004
 NOT_TX8                           00000006
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 16
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 16
 
 
 SYMBOL TABLE
@@ -909,7 +914,7 @@ PWM1CON                           0000009B
 R                                 00000002
 RA0                               00000000
 RA1                               00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 17
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 17
 
 
 SYMBOL TABLE
@@ -968,7 +973,7 @@ RESTO                             0000003D
 RP0                               00000005
 RP1                               00000006
 RSEN                              00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 18
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 18
 
 
 SYMBOL TABLE
@@ -1027,7 +1032,7 @@ T1CON                             00000010
 T1GINV                            00000007
 T1GIV                             00000007
 T1GSS                             00000001
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 19
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 19
 
 
 SYMBOL TABLE
@@ -1086,7 +1091,7 @@ TRISC4                            00000004
 TRISC5                            00000005
 TRISC6                            00000006
 TRISC7                            00000007
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 20
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 20
 
 
 SYMBOL TABLE
@@ -1145,7 +1150,7 @@ VRSS                              00000004
 W                                 00000000
 WCOL                              00000007
 WDTCON                            00000105
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 21
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 21
 
 
 SYMBOL TABLE
@@ -1171,12 +1176,12 @@ WUE                               00000001
 W_TEMP                            00000020
 W_TEMP_CASE                       0000002F
 Z                                 00000002
-_.org_1_000C                      0000000C
-_.org_1_0072                      00000072
-_.org_1_00B2                      000000B2
-_.org_1_00B7                      000000B7
-_.org_1_00F2                      000000F2
-_.org_1_0128                      00000128
+_.org_1_003C                      0000003C
+_.org_1_0071                      00000071
+_.org_1_00B1                      000000B1
+_.org_1_00B6                      000000B6
+_.org_1_00F1                      000000F1
+_.org_1_0127                      00000127
 _BOR21V                           00003EFF
 _BOR40V                           00003FFF
 _BOR4V_BOR21V                     00003EFF
@@ -1204,7 +1209,7 @@ _EXTRCIO                          00003FFE
 _EXTRC_OSC_CLKOUT                 00003FFF
 _EXTRC_OSC_NOCLKOUT               00003FFE
 _FCMEN_OFF                        000037FF
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 22
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 22
 
 
 SYMBOL TABLE
@@ -1247,44 +1252,46 @@ _WRT_HALF                         000039FF
 _WRT_OFF                          00003FFF
 _XT_OSC                           00003FF9
 __16F887                          00000001
-cargar_contexto                   0000013C
-cargar_contexto_case              00000143
-case_letras                       00000046
-configuracion_inicial             00000011
-convertir_dec_ascii               00000103
-convertir_valor_dec               00000118
-dividir                           000000DB
-enviar_conversion_usart_dec       00000093
-enviar_conversion_usart_hexa      00000054
-enviar_w                          0000006F
-guardar_contexto                  00000130
-guardar_contexto_case             00000136
-interrupt                         00000008
-interrupt_usart                   00000041
-loop_dividir                      000000E0
-main                              00000005
-MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  13:41:09         PAGE 23
+cargar_contexto                   0000013B
+cargar_contexto_case              00000142
+case_letras                       00000045
+configuracion_inicial             0000000C
+convertir_dec_ascii               00000102
+convertir_valor_dec               00000117
+dividir                           000000DA
+enviar_conversion_usart_dec       00000092
+enviar_conversion_usart_hexa      00000053
+enviar_w                          0000006E
+guardar_contexto                  0000012F
+guardar_contexto_case             00000135
+interrupt                         00000009
+interrupt_usart                   00000040
+leer_usart                        00000039
+leer_usart1                       0000003E
+MPASM 5.84  OBLIGATORIO - PARTE4 - NORMALIZA   11-22-2019  14:22:37         PAGE 23
 
 
 SYMBOL TABLE
   LABEL                             VALUE 
 
+loop_dividir                      000000DF
+main                              00000005
 mainloop                          00000006
-mapear_enviar_dec                 000000F5
-mapear_enviar_hexa                0000006C
-mapear_hexa                       00000077
-multiplicar                       000000C4
-multiplicar_loop                  000000D0
-realizar_conversion               00000126
-regla_de_tres                     000000A7
-restar_dividir                    000000EC
-rutina_letra_A                    0000004D
-rutina_letra_a                    00000088
-sumar_30                          0000007E
-sumar_37                          00000083
+mapear_enviar_dec                 000000F4
+mapear_enviar_hexa                0000006B
+mapear_hexa                       00000076
+multiplicar                       000000C3
+multiplicar_loop                  000000CF
+realizar_conversion               00000125
+regla_de_tres                     000000A6
+restar_dividir                    000000EB
+rutina_letra_A                    0000004C
+rutina_letra_a                    00000087
+sumar_30                          0000007D
+sumar_37                          00000082
 
 Errors   :     0
-Warnings :    10 reported,     0 suppressed
-Messages :    13 reported,     0 suppressed
+Warnings :    11 reported,     0 suppressed
+Messages :    12 reported,     0 suppressed
 
 

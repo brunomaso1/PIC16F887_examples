@@ -39,23 +39,6 @@ cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
     DELAY_CONTADOR ; 0x31
     DELAY_1MS_CONTADOR_1 ; 0x32
     DELAY_1MS_CONTADOR_2 ; 0x33
-    MULTIPLICANDO_REGLA ; 0x34
-    DIVISOR_REGLA ; 0x35
-    REGLAE ; 0x36
-    REGLAF ; 0x37
-    VALOR_CONVERSION_REGLA ; 0x38
-    MULTIPLICANDO ; 0x39
-    PRODH ; 0x3A
-    PRODL ; 0x3B
-    COCIENTE ; 0x3C
-    RESTO ; 0x3D
-    MULT ; 0x3E
-    DIVIDENDO ; 0x3F
-    ASCII1 ; 0x40
-    ASCII2 ; 0x41
-    ASCII3 ; 0x42
-    ASCII_TEMP ; 0x43
-    ASCII_CONVERSION ; 0x44
 
 endc
    
@@ -73,6 +56,7 @@ main
     
 mainloop
     call realizar_conversion
+    call leer_usart
     goto mainloop
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -80,12 +64,19 @@ mainloop
 interrupt
     call guardar_contexto
 
+    ; Identifico la interrupcion.
     banksel PIR1
-    btfss PIR1, RCIF ; Interrupcion usart?
+    btfss PIR1, TMR1IF ; Interrupcion timer1?
     goto $+3
-    bcf PIR1, RCIF
-    call interrupt_usart
+    bcf PIR1, TMR1IF
+    call interrupt_tmr1
     
+    banksel PIR2
+    btfss PIR2, EEIF; Interrupcion escritura?
+    goto $+3
+    bcf PIR2, EEIF
+    call interrupt_eeprom    
+
     call cargar_contexto
     retfie ; interrupt
 	
@@ -138,10 +129,50 @@ configuracion_inicial
     banksel PIE1 
     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
+     ; Chequeo inicial de la memoria EEPROM.
+    movlw 0x30
+    call leer_memoria
+    ; Chequeo que en la dirección 0x30 exista el valor 0x77. Si existe este 
+    ; valor significa que la memoria está inicializada, sino hay que
+    ; inicializarla.
+    sublw 0x77
+    ; INICIO IF
+	btfsc STATUS, Z
+	; THEN (w = 0x77)
+	goto $+2
+	; ELSE (w <> 0x77)
+	call inicializar_eeprom
+    ; FIN IF   
+    
+     ; Configuro el timer1.
+    banksel PIE1 ;  Timer1 Overflow Interrupt Enable bit
+    bsf PIE1, TMR1IE    
+    banksel PIR1
+    bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+    banksel T1CON
+    bcf T1CON, TMR1CS ; Timer1 Clock Source Select bit = Clock
+    ; Configurar preescaler timer1(1:8)
+    bsf T1CON, T1CKPS0
+    bsf T1CON, T1CKPS1
+    bsf T1CON, TMR1ON ; Encender el timer.
+    ; Reinicio el contador tmr1.
+    call re_iniciar_contador1
+    ; Reinicio el timer1.
+    call re_iniciar_timer1
+	
     return ; configurar_puertos
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
 
+leer_usart
+    banksel PIR1
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    call interrupt_usart ; NO ANDA ESTO, SE HARDCODEA.
+    bcf PIR1, RCIF
+    
+    return ; leer_usart
+    
 ; Lee el contenido del puerto y dervia en un case que indica que letra se
 ; ingresó.
 interrupt_usart
@@ -155,10 +186,10 @@ case_letras
     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
     btfsc STATUS, Z
     call rutina_letra_A
-    
-    xorlw b'01100001' ^ b'01000001' ; 0x61 = 'a' (ASCII)
+ 
+    xorlw b'01001000' ^ b'01000001' ; 0x48 = 'H' (ASCII)
     btfsc STATUS, Z               
-    call rutina_letra_a
+    call rutina_letra_H
 	
     return ; case_letras
 
@@ -173,7 +204,69 @@ rutina_letra_A
 
     call cargar_contexto_case
     return ; rutina_letra_A
-    	
+    
+; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
+; envía por el puerto usart.
+rutina_letra_H
+    call guardar_contexto_case
+    
+    ; Leo el puntero del buffer actual.
+    movlw 0x31
+    call leer_memoria
+    
+    ; Guardo el valor del puntero actual.
+    banksel PUNTERO_ACTUAL
+    movwf PUNTERO_ACTUAL
+    
+    ; Guardo el valor inicial de ITERADOR.
+    banksel ITERADOR
+    movwf ITERADOR
+
+    WhileLoopInicio
+	; Obtengo el dato que apunta ITERADOR.
+	banksel ITERADOR
+	movf ITERADOR, w
+	banksel EEADR
+	movwf EEADR
+	call leer_memoria
+	
+	; Envío el dato (contenido en w) por el puerto usart.
+	call enviar_conversion_usart_hexa
+	; Envío un salto de linea.
+	movlw d'10'
+	call enviar_w
+	
+	; Incremento ITERADOR.
+	banksel ITERADOR
+	decf ITERADOR, f
+	; Chequeo que no me pase el buffer.
+	movf ITERADOR, w
+	sublw 0x3F
+	; INICIO IF
+	    btfss STATUS, C	    
+	    ; THEN (w > 0x3F)
+	    goto $+3
+	    ; ELSE (w <= 0x3F)
+	    movlw 0x49
+	    movwf ITERADOR
+	; FIN IF
+	
+	; Compruebo que no llegue al PUNTERO_ACTUAL (fin del loop)	
+	banksel PUNTERO_ACTUAL
+	movf PUNTERO_ACTUAL, w
+	banksel ITERADOR
+	subwf ITERADOR, w
+	; INICIO IF
+	    btfsc STATUS, Z
+	    ; THEN (ITERADOR = PUNTERO_ACTUAL)
+	    goto $+2 
+	    ; ELSE (ITERADOR <> PUNTERO_ACTUAL)
+	    goto WhileLoopInicio
+	; FIN IF
+    call cargar_contexto_case
+    
+    return ; rutina_letra_H
+	
 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
 ; usart.
 enviar_conversion_usart_hexa	
@@ -245,227 +338,176 @@ sumar_37
     movf TEMP_W, w
     addlw b'00110111' ; 0x37 -> 55 decimal
     return ; mapear_hexa
+	
+; Inicializa la memoria EEPROM.
+inicializar_eeprom
+    ; Inicializo la flag de memoria inicializada.
+    ; Cargo 0x30 (Puntero flag del buffer)
+    movlw 0x30
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que está inicializada la memoria.
+    movlw 0x77
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
 
-; Manda la conversion en formato decimal.
-rutina_letra_a
-    call guardar_contexto_case
-    
+    ; Inicializo el puntero inicial del donde arranca el buffer.
+    ; Cargo 0x31 (SIGUIENTE_PUNTERO)
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el dato que indica que está inicializada la memoria.
+    movlw 0x49
+    banksel EEDAT
+    movwf EEDAT
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; inicializar_eeprom
+
+; Guarda el valor de VALOR_CONVERSION en el buffer circular.
+guardar_memoria_VALOR_CONVERSION
+    ; Cargo SIGUIENTE_PUNTERO e impacto en memoria.
+    call obtener_siguiente_puntero
+    ; Cargo el dato de VALOR_CONVERSION en EEDAT.
     banksel VALOR_CONVERSION
     movf VALOR_CONVERSION, w
-    call enviar_conversion_usart_dec
-    
-     ; Envío grados centrígrados.
-    movlw d'186' ; °
-    call enviar_w
-    movlw d'67' ; C
-    call enviar_w    
-   
-    call cargar_contexto_case
-    
-    return ; rutina_letra_a
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    banksel SIGUIENTE_PUNTERO
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria
+
+    return ; guardar_memoria_VALOR_CONVERSION
+
+; Obtiene y guarda el siguiente puntero del buffer en memoria.	
+obtener_siguiente_puntero
+    ; Cargo 0X31 (Puntero de SIGUIENTE_PUNTERO) en EEADR
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Cargo el valor de memoria en w.
+    call leer_memoria
+
+    ; Sumo 1 al puntero.
+    addlw d'1'
+    banksel SIGUIENTE_PUNTERO
+    movwf SIGUIENTE_PUNTERO
+
+    ; Chequeo que no me pase del buffer.
+    sublw 0x49
+    ; INICIO IF
+	btfsc STATUS, C
+	; THEN (w <= 0x49)
+	goto $+3
+	; ELSE (w > 0x49)
+	movlw 0x40
+	movwf SIGUIENTE_PUNTERO
+    ; FIN IF
+
+    ; Cargo el dato de SIGUIENTE_PUNTERO en EEDAT.
+    movf SIGUIENTE_PUNTERO, w
+    banksel EEDAT
+    movwf EEDAT
+    ; Cargo el puntero de SIGUIENTE_PUNTERO en EEADR.
+    movlw 0x31
+    banksel EEADR
+    movwf EEADR
+    ; Guardo el valor de w en memoria.
+    call guardar_memoria	
+
+    return ; obtener_siguiente_puntero
+
+; Leo un valor ya seteado en EEADR de memoria en w.
+leer_memoria
+    banksel EEADR
+    movwf EEADR ; Cargo la dirección.
+
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, RD ; Activo la lectura.
+    banksel EEDAT
+    movf EEDAT, w ; Guardo el valor en w.
+
+    return ; leer_memoria
+
+guardar_memoria
+    banksel EECON1
+    bcf EECON1, EEPGD ; Apunto a la EEPROM
+    bsf EECON1, WREN ; Activo la escritura.
+
+    bcf INTCON, GIE ; Desactivo interrupciones.
+    btfsc INTCON, GIE
+    goto $-2
+
+    ; SECCION INTOCABLE
+    movlw 0x55
+    movwf EECON2
+    movlw 0xAA
+    movwf EECON2
+    bsf EECON1, WR ; Se comienza la escritura.
+    ; FIN SECCION INTOCABLE
+
+    bsf INTCON, GIE ; Activo las interrupciones.
+    btfsc EECON1, WR
+    goto $-1
+    bcf EECON1, WREN
+    return ; guardar_memoria
 	
-; Obtiene el valor de la conversion en w, lo mapea a decimal y lo envía por el
-; puerto usart.
-enviar_conversion_usart_dec
-    banksel VALOR_CONVERSION_TEMP
-    movwf VALOR_CONVERSION_TEMP
-    
-    banksel MULTIPLICANDO_REGLA
+; Configurar CONTADOR_TIMER1
+re_iniciar_contador1
+    banksel CONTADOR_TIMER1
     movlw d'100'
-    movwf MULTIPLICANDO_REGLA
-    
-    banksel DIVISOR_REGLA
-    movlw d'255'
-    movwf DIVISOR_REGLA
- 
-    banksel VALOR_CONVERSION_TEMP
-    movf VALOR_CONVERSION_TEMP, w
-    
-    call regla_de_tres
-    
-    banksel REGLAE
-    movf REGLAE, w
-    call mapear_enviar_dec
-    
-    return ; enviar_conversion_usart_dec
+    movwf CONTADOR_TIMER1
 
-; Realiza una regla de tres.
-; w = w*MULTIPLICANDO_REGLA/DIVISOR_REGLA
-regla_de_tres
-    banksel VALOR_CONVERSION_REGLA
-    movwf VALOR_CONVERSION_REGLA
-    movf MULTIPLICANDO_REGLA, w
-    movwf MULTIPLICANDO
-    movf VALOR_CONVERSION_REGLA, w
-    call multiplicar
-    
-    ; Si la multiplicación dio 0, devuelvo 0.
-    banksel PRODH
-    movf PRODH, f
+    return ; re_iniciar_contador1
+
+; Rutina de interrupción del tmr1.
+interrupt_tmr1
+    ; Decremento el contador.
+    banksel CONTADOR_TIMER1
     ; INICIO IF
-	btfss STATUS, Z
-	; THEN (PRODH <> 0)
-	goto $+7
-	; ELSE (PRODH = 0)
-	banksel PRODL
-	movf PRODL, f
-	; INICIO IF
-	    btfss STATUS, Z
-	    ; THEN (PRODL <> 0)
-	    goto $+2
-	    ; ELSE (PRODL = 0)
-	    retlw 0 ; Si es 0 el producto, devuelvo 0 porque no puedo dividir.
-	; FIN IF
+	    decfsz CONTADOR_TIMER1, f
+	    ; CONTADOR_TIMER <> 0 THEN
+	    goto $+3
+	    ; ELSE
+	    call guardar_memoria_VALOR_CONVERSION
+	    call re_iniciar_contador1
     ; FIN IF
-    
-    ; LOS PARAMETROS DE dividir YA ESTAN CARGADOS, CARGO SOLO w.
-    banksel DIVISOR_REGLA
-    movf DIVISOR_REGLA, w
-    call dividir
-    
-    banksel COCIENTE
-    movf COCIENTE, w
-    movwf REGLAE
-    movf RESTO, w
-    movwf REGLAF    
-    
-    return ; regla_de_tres
+    call re_iniciar_timer1
 
-; Multiplica dos numeros.
-; MULTIPLICANDO * w = PRODH:PRODL
-multiplicar
-    banksel MULT
-    movwf MULT
-    
-    ; Limpio los resultados.
-    banksel PRODL
-    clrf PRODL
-    clrf PRODH
-    
-    banksel MULTIPLICANDO
-    movf MULTIPLICANDO, f
-    ; INICIO IF
-	btfsc STATUS, Z
-	; THEN (MULTIPLICANDO = 0)
-	return
-	; ELSE (MULTIPLICANDO <> 0)
-	multiplicar_loop
-	    banksel MULT
-	    movf MULT, w
-	    banksel PRODL
-	    addwf PRODL, f
-	    btfsc STATUS, C
-	    incf PRODH, f
-	    decfsz MULTIPLICANDO, f
-	    goto multiplicar_loop	    
-    ; FIN IF
-    return ; multiplicar
+    return ; interrupt_tmr1
 
-; Divide dos numeros.
-; PRODH:PRODL/w = w*COCIENTE + RESTO
-dividir
-    banksel COCIENTE
-    clrf COCIENTE
-    clrf RESTO
-    movwf DIVIDENDO
-    
-    loop_dividir
-	banksel PRODH
-	movf PRODH, f
-	; INICIO IF
-	    btfss STATUS, Z
-	    ; THEN (PRODH <> 0)
-	    goto restar_dividir
-	    ; ELSE (PRODH = 0)
-	    movf DIVIDENDO, w
-	    subwf PRODL, w
-	    ; INICIO IF
-		btfsc STATUS, C
-		; THEN (PRODL >= DIVIDENDO)
-		goto restar_dividir
-		; ELSE (PRODL < DIVIDENDO)
-		movf PRODL, w
-		movwf RESTO
-		return ; dividir
-	    ; FIN IF
-	; FIN IF
-	
-	restar_dividir
-	    banksel COCIENTE
-	    incf COCIENTE, f
-	    
-	    movf DIVIDENDO, w
-	    subwf PRODL, f
-	    ; INICIO IF
-		btfsc STATUS, C
-		; THEN (PRODL < DIVIDENDO)
-		goto $+2
-		; ELSE (PRODL >= DIVIDENDO)
-		decf PRODH, f
-	    goto loop_dividir
+; Interrupcion de escritura de la eepron.
+interrupt_eeprom
+    banksel PIR2
+    bcf PIR2, EEIF ; Limpio la interrupcion de la eeprom
 
-; Mapea y envía un valor decimal por el puerto usart.
-mapear_enviar_dec
-    call convertir_dec_ascii
-    
-    banksel ASCII1
-    movf ASCII1, w
-    call enviar_w
-    
-    banksel ASCII2
-    movf ASCII2, w
-    call enviar_w
-    
-    banksel ASCII3
-    movf ASCII3, w
-    call enviar_w   
-    
-    return ; mapear_enviar_dec
+    return ; interrupt_eeprom
 
-; Convierte el valor numerico de w en ASCII.
-; w = ASCII3 ASCII2 ASCII1
-convertir_dec_ascii    
-    call convertir_valor_dec
-    banksel ASCII_TEMP
-    movwf ASCII_TEMP
-    movf ASCII_CONVERSION, w
-    movwf ASCII3 ; Almaceno el resultado
+; Inicia el timer con el valor precargado, para una interrupción cada 100 ms.
+re_iniciar_timer1
+;;;;;;;;;;;; Calculo para la cantidad de tiempo ;;;;;;;;;;;;;;;;
+    ; ValorTimer = ValorMaximoTimer - ((DelaySolicitado * Fosc) / (Prescalar * 4))
+    ; Formula para 100 ms: ValorTimer = 65536 - ((100ms * 20Mhz) / (8 * 4)) = 3036
+
+    ; Cargar 3036 (00001011 11011100)
+    banksel PIR1
     
-    movf ASCII_TEMP, w
-    call convertir_valor_dec
-    banksel ASCII_TEMP
-    movwf ASCII_TEMP
-    movf ASCII_CONVERSION, w
-    movwf ASCII2 ; Almaceno el resultado
+    movlw b'11011100' 
+    movwf  TMR1L
+    movlw b'00001011' 
+    movwf  TMR1H
     
-    movf ASCII_TEMP, w
-    call convertir_valor_dec
-    banksel ASCII_TEMP
-    movwf ASCII_TEMP
-    movf ASCII_CONVERSION, w
-    movwf ASCII1 ; Almaceno el resultado
-    
-    return ; convertir_dec_ascii
-   
-; Convierte solo una parte del valor en w.
-; ASCII_CONVERSION = w MOD DIVISOR
-; w = w/DIVISOR
-convertir_valor_dec
-    banksel PRODL
-    movwf PRODL
-    movlw d'10'
-    call dividir
-    
-    banksel RESTO
-    movf RESTO, w    
-    addlw b'00110000' ; Sumo 30.
-    movwf ASCII_CONVERSION ; Almaceno el resultado
-    
-    banksel COCIENTE
-    movf COCIENTE, w
-    
-    return ; convertir_valor_dec
-    
+    bcf PIR1, TMR1IF ; Timer1 Overflow Interrupt Flag bit
+    return ; re_iniciar_timer1
+
 ; Realiza la conversion y almacena los valores en variables.
 realizar_conversion
     bsf ADCON0, GO ; Start conversion
