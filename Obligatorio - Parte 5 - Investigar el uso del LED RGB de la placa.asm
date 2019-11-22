@@ -83,8 +83,8 @@ main
 mainloop
     call realizar_conversion
 ;    call encender_rgb_1
-;    call encender_rgb_2
-    call encender_rgb_3
+    call encender_rgb_2
+;    call encender_rgb_3
     goto mainloop
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
