@@ -16,8 +16,6 @@
       <itemPath>Obligatorio - Parte1 - ConversionAD&amp;BuferCircular.asm</itemPath>
       <itemPath>Obligatorio - Full.asm</itemPath>
       <itemPath>Obligatorio - Parte4 - Normalizacion de temperatura.asm</itemPath>
-      <itemPath>Obligatorio - Parte2 - Protocolo entre PIC y el PC - SIN INTERRUPCIONES.asm</itemPath>
-      <itemPath>Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -82,7 +80,7 @@
         <property key="hex-output-format" value="INHX32"/>
         <property key="map-file" value="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map"/>
       </MPASMWIN-LD>
-      <item path="Obligatorio - Full.asm" ex="true" overriding="false">
+      <item path="Obligatorio - Full.asm" ex="false" overriding="false">
         <MPASMWIN-AS>
         </MPASMWIN-AS>
         <MPASMWIN-LD>
@@ -100,10 +98,6 @@
         <mpasmsuite>
         </mpasmsuite>
       </item>
-      <item path="Obligatorio - Parte2 - Protocolo entre PIC y el PC - SIN INTERRUPCIONES.asm"
-            ex="true"
-            overriding="false">
-      </item>
       <item path="Obligatorio - Parte2 - Protocolo entre PIC y el PC.asm"
             ex="true"
             overriding="false">
@@ -113,10 +107,6 @@
         </MPASMWIN-LD>
         <mpasmsuite>
         </mpasmsuite>
-      </item>
-      <item path="Obligatorio - Parte4 - Normalizacion de temperatura - SIN INTERRUPCIONES.asm"
-            ex="true"
-            overriding="false">
       </item>
       <item path="Obligatorio - Parte4 - Normalizacion de temperatura.asm"
             ex="true"

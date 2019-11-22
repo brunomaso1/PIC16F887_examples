@@ -73,13 +73,16 @@ main
     
 mainloop
     call realizar_conversion
+    ; NOTA: PARA REALIZAR SIN INTERRUPCIONES, DESCOMENTAR ESTO:
+;    call leer_usart
     goto mainloop
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 interrupt
     call guardar_contexto
-
+    
+    ; NOTA: PARA SACAR LAS INTERRUPCIONES DE USART, COMENTAR ESTO:
     banksel PIR1
     btfss PIR1, RCIF ; Interrupcion usart?
     goto $+3
@@ -135,6 +138,7 @@ configuracion_inicial
     banksel RCSTA
     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
+    ; NOTA: PARA SACAR LAS INTERRUCIONES, COMENTAR ESTO:
     banksel PIE1 
     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
@@ -144,14 +148,22 @@ configuracion_inicial
 
 ; Lee el contenido del puerto y dervia en un case que indica que letra se
 ; ingresó.
+leer_usart
+    banksel PIR1
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    call interrupt_usart
+    bcf PIR1, RCIF
+    
+    return ; leer_usart
+    
+; Lee el contenido del puerto y dervia en un case que indica que letra se
+; ingresó.
 interrupt_usart
     banksel RCREG
     movf RCREG, w
-    call case_letras
-    return ; interrupt_usart
-	
-; Identifica que letra se leyó en el puerto USART.	
-case_letras
+    
+    ; Case letras:
     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
     btfsc STATUS, Z
     call rutina_letra_A
@@ -159,19 +171,16 @@ case_letras
     xorlw b'01100001' ^ b'01000001' ; 0x61 = 'a' (ASCII)
     btfsc STATUS, Z               
     call rutina_letra_a
+    
+    return ; interrupt_usart
 	
-    return ; case_letras
-
 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
 ; el puerto usart.
 rutina_letra_A
-    call guardar_contexto_case
-
     banksel VALOR_CONVERSION
     movf VALOR_CONVERSION, w
     call enviar_conversion_usart_hexa
 
-    call cargar_contexto_case
     return ; rutina_letra_A
     	
 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
@@ -247,9 +256,7 @@ sumar_37
     return ; mapear_hexa
 
 ; Manda la conversion en formato decimal.
-rutina_letra_a
-    call guardar_contexto_case
-    
+rutina_letra_a    
     banksel VALOR_CONVERSION
     movf VALOR_CONVERSION, w
     call enviar_conversion_usart_dec
@@ -258,9 +265,7 @@ rutina_letra_a
     movlw d'186' ; °
     call enviar_w
     movlw d'67' ; C
-    call enviar_w    
-   
-    call cargar_contexto_case
+    call enviar_w
     
     return ; rutina_letra_a
 	
@@ -406,25 +411,6 @@ dividir
 
 ; Mapea y envía un valor decimal por el puerto usart.
 mapear_enviar_dec
-    call convertir_dec_ascii
-    
-    banksel ASCII1
-    movf ASCII1, w
-    call enviar_w
-    
-    banksel ASCII2
-    movf ASCII2, w
-    call enviar_w
-    
-    banksel ASCII3
-    movf ASCII3, w
-    call enviar_w   
-    
-    return ; mapear_enviar_dec
-
-; Convierte el valor numerico de w en ASCII.
-; w = ASCII3 ASCII2 ASCII1
-convertir_dec_ascii    
     call convertir_valor_dec
     banksel ASCII_TEMP
     movwf ASCII_TEMP
@@ -445,8 +431,20 @@ convertir_dec_ascii
     movf ASCII_CONVERSION, w
     movwf ASCII1 ; Almaceno el resultado
     
-    return ; convertir_dec_ascii
-   
+    banksel ASCII1
+    movf ASCII1, w
+    call enviar_w
+    
+    banksel ASCII2
+    movf ASCII2, w
+    call enviar_w
+    
+    banksel ASCII3
+    movf ASCII3, w
+    call enviar_w   
+    
+    return ; mapear_enviar_dec
+  
 ; Convierte solo una parte del valor en w.
 ; ASCII_CONVERSION = w MOD DIVISOR
 ; w = w/DIVISOR
@@ -488,14 +486,6 @@ guardar_contexto
     movwf STATUS_TEMP ; Guardo STATUS.
     return ; guardar_contexto
 	
-guardar_contexto_case
-    banksel W_TEMP_CASE
-    movwf W_TEMP_CASE  ; Guardo w.
-    swapf STATUS, w ; Swap status en w.
-    movwf STATUS_TEMP_CASE ; Guardo STATUS.
-
-    return ; guardar_contexto_case
-    
 cargar_contexto
     banksel STATUS_TEMP
     swapf STATUS_TEMP, w
@@ -504,13 +494,4 @@ cargar_contexto
     swapf W_TEMP, w
     return ; cargar_contexto
 	
-cargar_contexto_case
-    banksel STATUS_TEMP_CASE
-    swapf STATUS_TEMP_CASE, w
-    movwf STATUS
-    swapf W_TEMP_CASE, f
-    swapf W_TEMP_CASE, w
-
-    return ; cargar_contexto_case
-
 end

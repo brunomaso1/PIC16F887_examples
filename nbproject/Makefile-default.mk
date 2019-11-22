@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED=
+SOURCEFILES_QUOTED_IF_SPACED="Obligatorio - Full.asm"
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED=
-POSSIBLE_DEPFILES=
+OBJECTFILES_QUOTED_IF_SPACED="${OBJECTDIR}/Obligatorio - Full.o"
+POSSIBLE_DEPFILES="${OBJECTDIR}/Obligatorio - Full.o.d"
 
 # Object Files
-OBJECTFILES=
+OBJECTFILES=${OBJECTDIR}/Obligatorio\ -\ Full.o
 
 # Source Files
-SOURCEFILES=
+SOURCEFILES=Obligatorio - Full.asm
 
 
 
@@ -95,7 +95,23 @@ MP_LINKER_DEBUG_OPTION=-r=ROM@0x1F00:0x1FFE -r=RAM@SHARE:0x70:0x70 -r=RAM@SHARE:
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: assemble
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
+${OBJECTDIR}/Obligatorio\ -\ Full.o: Obligatorio\ -\ Full.asm  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} "${OBJECTDIR}/Obligatorio - Full.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Full.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Full.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Full.lst\" -e\"${OBJECTDIR}/Obligatorio - Full.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Full.o\" \"Obligatorio - Full.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Full.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Full.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	
 else
+${OBJECTDIR}/Obligatorio\ -\ Full.o: Obligatorio\ -\ Full.asm  nbproject/Makefile-${CND_CONF}.mk
+	@${MKDIR} "${OBJECTDIR}" 
+	@${RM} "${OBJECTDIR}/Obligatorio - Full.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Full.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Full.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Full.lst\" -e\"${OBJECTDIR}/Obligatorio - Full.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Full.o\" \"Obligatorio - Full.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Full.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Full.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	
 endif
 
 # ------------------------------------------------------------------------------------

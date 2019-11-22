@@ -19,26 +19,44 @@
 ; Organizacion de la memoria de datos 
 cblock 0x20	; Comienzo a escribir la memoria de datos en la direccion 0x20
 ; Definicion de variables
-    W_TEMP ; 0X20
-    STATUS_TEMP ; 0X21
-    CONTADOR_1 ; 0x22
-    CONTADOR_2 ; 0x23
-    CONTADOR_3 ;0x24
-    VALOR_CONVERSION_TEMP ; 0x25
-    VALOR_CONVERSION ; 0x26
-    VALOR_CONVERSIONH ; 0x27
-    VALOR_CONVERSIONL ; 0x28
-    VALOR_CONVERSION_MEMORIA ; 0x29
-    CONTADOR_TIMER1 ; 0x2A
-    SIGUIENTE_PUNTERO ; 0X2B
-    PUNTERO_ACTUAL ; 0x2C
-    TEMP_W ; 0x2D
-    STATUS_TEMP_CASE ; 0x2E
-    W_TEMP_CASE ; 0x2F
-    ITERADOR ; 0x30
-    DELAY_CONTADOR ; 0x31
-    DELAY_1MS_CONTADOR_1 ; 0x32
-    DELAY_1MS_CONTADOR_2 ; 0x33
+    ASCII_CONVERSION
+    ASCII_TEMP
+    ASCII1
+    ASCII2
+    ASCII3
+    COCIENTE
+    CONTADOR_
+    CONTADOR_1
+    CONTADOR_2
+    CONTADOR_TIMER1
+    DELAY_1MS_CONTADOR_1
+    DELAY_1MS_CONTADOR_2
+    DELAY_CONTADOR
+    DIVIDENDO
+    DIVISOR_REGLA
+    ITERADOR
+    MULT
+    MULTIPLICANDO
+    MULTIPLICANDO_REGLA
+    PRODH
+    PRODL
+    PUNTERO_ACTUAL
+    REGLAE
+    REGLAF
+    RESTO
+    SIGUIENTE_PUNTERO
+    STATUS_TEMP
+    STATUS_TEMP_CASE
+    TEMP_W
+    VALOR_CONVERSION
+    VALOR_CONVERSION_MEMORIA
+    VALOR_CONVERSION_REGLA
+    VALOR_CONVERSION_TEMP
+    VALOR_CONVERSIONH
+    VALOR_CONVERSIONL
+    W_TEMP
+    W_TEMP_CASE
+
 
 endc
    
@@ -56,6 +74,8 @@ main
     
 mainloop
     call realizar_conversion
+    ; NOTA: PARA REALIZAR SIN INTERRUPCIONES, DESCOMENTAR ESTO:
+;    call leer_usart
     goto mainloop
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINA DE INTERRUPCION ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,6 +90,7 @@ interrupt
     bcf PIR1, TMR1IF
     call interrupt_tmr1    
 
+    ; NOTA: PARA SACAR LAS INTERRUPCIONES DE USART, COMENTAR ESTO:
     banksel PIR1
     btfss PIR1, RCIF ; Interrupcion usart?
     goto $+3
@@ -131,6 +152,7 @@ configuracion_inicial
     banksel RCSTA
     bsf RCSTA, CREN  ; Continuous Recive Enable bit = Enables receiver
     bsf RCSTA, SPEN  ; Serial Port Enable bit = Serial port enabled.
+    ; NOTA: PARA SACAR LAS INTERRUCIONES, COMENTAR ESTO:
     banksel PIE1 
     bsf PIE1, RCIE ; Configuro que se generen interrupciones con la recepción
 
@@ -169,16 +191,22 @@ configuracion_inicial
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RUTINAS PROGRAMA PRINCIPAL ;;;;;;;;;;;;;;;;;;;;;;
 
+leer_usart
+    banksel PIR1
+    btfss PIR1, RCIF ; Interrupcion usart?
+    goto $+3
+    call interrupt_usart
+    bcf PIR1, RCIF
+    
+    return ; leer_usart
+    
 ; Lee el contenido del puerto y dervia en un case que indica que letra se
 ; ingresó.
 interrupt_usart
     banksel RCREG
     movf RCREG, w
-    call case_letras
-    return ; interrupt_usart
-	
-; Identifica que letra se leyó en el puerto USART.	
-case_letras
+    
+    ; Case letras:
     xorlw b'01000001' ; 0x41 = 'A' (ASCII)
     btfsc STATUS, Z
     call rutina_letra_A
@@ -186,26 +214,25 @@ case_letras
     xorlw b'01001000' ^ b'01000001' ; 0x48 = 'H' (ASCII)
     btfsc STATUS, Z               
     call rutina_letra_H
-	
-    return ; case_letras
+    
+    xorlw b'01100001' ^ b'01001000' ; 0x61 = 'a' (ASCII)
+    btfsc STATUS, Z               
+    call rutina_letra_a
+    
+    return ; interrupt_usart
 
 ; Rutina de letra A: Obtiene el valor actual de la conversion y la envía por
 ; el puerto usart.
 rutina_letra_A
-    call guardar_contexto_case
-
     banksel VALOR_CONVERSION
     movf VALOR_CONVERSION, w
     call enviar_conversion_usart_hexa
 
-    call cargar_contexto_case
     return ; rutina_letra_A
     
 ; Rutina de letra H: Obtiene los valores de memoria del buffer circular y los
 ; envía por el puerto usart.
-rutina_letra_H
-    call guardar_contexto_case
-    
+rutina_letra_H    
     ; Leo el puntero del buffer actual.
     movlw 0x31
     call leer_memoria
@@ -259,10 +286,218 @@ rutina_letra_H
 	    ; ELSE (ITERADOR <> PUNTERO_ACTUAL)
 	    goto WhileLoopInicio
 	; FIN IF
-    call cargar_contexto_case
-    
-    return ; rutina_letra_H
 	
+    return ; rutina_letra_H
+    
+; Manda la conversion en formato decimal.
+rutina_letra_a    
+    banksel VALOR_CONVERSION
+    movf VALOR_CONVERSION, w
+    call enviar_conversion_usart_dec
+    
+     ; Envío grados centrígrados.
+    movlw d'186' ; °
+    call enviar_w
+    movlw d'67' ; C
+    call enviar_w
+    
+    return ; rutina_letra_a
+
+; Obtiene el valor de la conversion en w, lo mapea a decimal y lo envía por el
+; puerto usart.
+enviar_conversion_usart_dec
+    banksel VALOR_CONVERSION_TEMP
+    movwf VALOR_CONVERSION_TEMP
+    
+    banksel MULTIPLICANDO_REGLA
+    movlw d'100'
+    movwf MULTIPLICANDO_REGLA
+    
+    banksel DIVISOR_REGLA
+    movlw d'255'
+    movwf DIVISOR_REGLA
+ 
+    banksel VALOR_CONVERSION_TEMP
+    movf VALOR_CONVERSION_TEMP, w
+    
+    call regla_de_tres
+    
+    banksel REGLAE
+    movf REGLAE, w
+    call mapear_enviar_dec
+    
+    return ; enviar_conversion_usart_dec
+    
+; Realiza una regla de tres.
+; w = w*MULTIPLICANDO_REGLA/DIVISOR_REGLA
+regla_de_tres
+    banksel VALOR_CONVERSION_REGLA
+    movwf VALOR_CONVERSION_REGLA
+    movf MULTIPLICANDO_REGLA, w
+    movwf MULTIPLICANDO
+    movf VALOR_CONVERSION_REGLA, w
+    call multiplicar
+    
+    ; Si la multiplicación dio 0, devuelvo 0.
+    banksel PRODH
+    movf PRODH, f
+    ; INICIO IF
+	btfss STATUS, Z
+	; THEN (PRODH <> 0)
+	goto $+7
+	; ELSE (PRODH = 0)
+	banksel PRODL
+	movf PRODL, f
+	; INICIO IF
+	    btfss STATUS, Z
+	    ; THEN (PRODL <> 0)
+	    goto $+2
+	    ; ELSE (PRODL = 0)
+	    retlw 0 ; Si es 0 el producto, devuelvo 0 porque no puedo dividir.
+	; FIN IF
+    ; FIN IF
+    
+    ; LOS PARAMETROS DE dividir YA ESTAN CARGADOS, CARGO SOLO w.
+    banksel DIVISOR_REGLA
+    movf DIVISOR_REGLA, w
+    call dividir
+    
+    banksel COCIENTE
+    movf COCIENTE, w
+    movwf REGLAE
+    movf RESTO, w
+    movwf REGLAF    
+    
+    return ; regla_de_tres
+
+; Multiplica dos numeros.
+; MULTIPLICANDO * w = PRODH:PRODL
+multiplicar
+    banksel MULT
+    movwf MULT
+    
+    ; Limpio los resultados.
+    banksel PRODL
+    clrf PRODL
+    clrf PRODH
+    
+    banksel MULTIPLICANDO
+    movf MULTIPLICANDO, f
+    ; INICIO IF
+	btfsc STATUS, Z
+	; THEN (MULTIPLICANDO = 0)
+	return
+	; ELSE (MULTIPLICANDO <> 0)
+	multiplicar_loop
+	    banksel MULT
+	    movf MULT, w
+	    banksel PRODL
+	    addwf PRODL, f
+	    btfsc STATUS, C
+	    incf PRODH, f
+	    decfsz MULTIPLICANDO, f
+	    goto multiplicar_loop	    
+    ; FIN IF
+    return ; multiplicar
+
+; Divide dos numeros.
+; PRODH:PRODL/w = w*COCIENTE + RESTO
+dividir
+    banksel COCIENTE
+    clrf COCIENTE
+    clrf RESTO
+    movwf DIVIDENDO
+    
+    loop_dividir
+	banksel PRODH
+	movf PRODH, f
+	; INICIO IF
+	    btfss STATUS, Z
+	    ; THEN (PRODH <> 0)
+	    goto restar_dividir
+	    ; ELSE (PRODH = 0)
+	    movf DIVIDENDO, w
+	    subwf PRODL, w
+	    ; INICIO IF
+		btfsc STATUS, C
+		; THEN (PRODL >= DIVIDENDO)
+		goto restar_dividir
+		; ELSE (PRODL < DIVIDENDO)
+		movf PRODL, w
+		movwf RESTO
+		return ; dividir
+	    ; FIN IF
+	; FIN IF
+	
+	restar_dividir
+	    banksel COCIENTE
+	    incf COCIENTE, f
+	    
+	    movf DIVIDENDO, w
+	    subwf PRODL, f
+	    ; INICIO IF
+		btfsc STATUS, C
+		; THEN (PRODL < DIVIDENDO)
+		goto $+2
+		; ELSE (PRODL >= DIVIDENDO)
+		decf PRODH, f
+	    goto loop_dividir
+
+; Mapea y envía un valor decimal por el puerto usart.
+mapear_enviar_dec
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII3 ; Almaceno el resultado
+    
+    movf ASCII_TEMP, w
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII2 ; Almaceno el resultado
+    
+    movf ASCII_TEMP, w
+    call convertir_valor_dec
+    banksel ASCII_TEMP
+    movwf ASCII_TEMP
+    movf ASCII_CONVERSION, w
+    movwf ASCII1 ; Almaceno el resultado
+    
+    banksel ASCII1
+    movf ASCII1, w
+    call enviar_w
+    
+    banksel ASCII2
+    movf ASCII2, w
+    call enviar_w
+    
+    banksel ASCII3
+    movf ASCII3, w
+    call enviar_w   
+    
+    return ; mapear_enviar_dec
+    
+; Convierte solo una parte del valor en w.
+; ASCII_CONVERSION = w MOD DIVISOR
+; w = w/DIVISOR
+convertir_valor_dec
+    banksel PRODL
+    movwf PRODL
+    movlw d'10'
+    call dividir
+    
+    banksel RESTO
+    movf RESTO, w    
+    addlw b'00110000' ; Sumo 30.
+    movwf ASCII_CONVERSION ; Almaceno el resultado
+    
+    banksel COCIENTE
+    movf COCIENTE, w
+    
+    return ; convertir_valor_dec
+    
 ; Obtiene el valor de la conversión en w, lo mapea y lo envía por el puerto
 ; usart.
 enviar_conversion_usart_hexa	
@@ -525,14 +760,6 @@ guardar_contexto
     swapf STATUS, w ; Swap status en w.
     movwf STATUS_TEMP ; Guardo STATUS.
     return ; guardar_contexto
-	
-guardar_contexto_case
-    banksel W_TEMP_CASE
-    movwf W_TEMP_CASE  ; Guardo w.
-    swapf STATUS, w ; Swap status en w.
-    movwf STATUS_TEMP_CASE ; Guardo STATUS.
-
-    return ; guardar_contexto_case
     
 cargar_contexto
     banksel STATUS_TEMP
@@ -542,13 +769,4 @@ cargar_contexto
     swapf W_TEMP, w
     return ; cargar_contexto
 	
-cargar_contexto_case
-    banksel STATUS_TEMP_CASE
-    swapf STATUS_TEMP_CASE, w
-    movwf STATUS
-    swapf W_TEMP_CASE, f
-    swapf W_TEMP_CASE, w
-
-    return ; cargar_contexto_case
-
 end
