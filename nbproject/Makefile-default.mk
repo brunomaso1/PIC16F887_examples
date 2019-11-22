@@ -57,17 +57,17 @@ OBJECTDIR=build/${CND_CONF}/${IMAGE_TYPE}
 DISTDIR=dist/${CND_CONF}/${IMAGE_TYPE}
 
 # Source Files Quoted if spaced
-SOURCEFILES_QUOTED_IF_SPACED="Obligatorio - Full.asm"
+SOURCEFILES_QUOTED_IF_SPACED="Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.asm"
 
 # Object Files Quoted if spaced
-OBJECTFILES_QUOTED_IF_SPACED="${OBJECTDIR}/Obligatorio - Full.o"
-POSSIBLE_DEPFILES="${OBJECTDIR}/Obligatorio - Full.o.d"
+OBJECTFILES_QUOTED_IF_SPACED="${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o"
+POSSIBLE_DEPFILES="${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o.d"
 
 # Object Files
-OBJECTFILES=${OBJECTDIR}/Obligatorio\ -\ Full.o
+OBJECTFILES=${OBJECTDIR}/Obligatorio\ -\ Parte\ 5\ -\ Investigar\ el\ uso\ del\ LED\ RGB\ de\ la\ placa.o
 
 # Source Files
-SOURCEFILES=Obligatorio - Full.asm
+SOURCEFILES=Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.asm
 
 
 
@@ -95,22 +95,22 @@ MP_LINKER_DEBUG_OPTION=-r=ROM@0x1F00:0x1FFE -r=RAM@SHARE:0x70:0x70 -r=RAM@SHARE:
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: assemble
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/Obligatorio\ -\ Full.o: Obligatorio\ -\ Full.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/Obligatorio\ -\ Parte\ 5\ -\ Investigar\ el\ uso\ del\ LED\ RGB\ de\ la\ placa.o: Obligatorio\ -\ Parte\ 5\ -\ Investigar\ el\ uso\ del\ LED\ RGB\ de\ la\ placa.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} "${OBJECTDIR}/Obligatorio - Full.o".d 
-	@${RM} "${OBJECTDIR}/Obligatorio - Full.o" 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Full.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Full.lst\" -e\"${OBJECTDIR}/Obligatorio - Full.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Full.o\" \"Obligatorio - Full.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Full.o"
-	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Full.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -d__DEBUG -d__MPLAB_DEBUGGER_PK3=1 -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o\" \"Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 else
-${OBJECTDIR}/Obligatorio\ -\ Full.o: Obligatorio\ -\ Full.asm  nbproject/Makefile-${CND_CONF}.mk
+${OBJECTDIR}/Obligatorio\ -\ Parte\ 5\ -\ Investigar\ el\ uso\ del\ LED\ RGB\ de\ la\ placa.o: Obligatorio\ -\ Parte\ 5\ -\ Investigar\ el\ uso\ del\ LED\ RGB\ de\ la\ placa.asm  nbproject/Makefile-${CND_CONF}.mk
 	@${MKDIR} "${OBJECTDIR}" 
-	@${RM} "${OBJECTDIR}/Obligatorio - Full.o".d 
-	@${RM} "${OBJECTDIR}/Obligatorio - Full.o" 
-	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Full.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Full.lst\" -e\"${OBJECTDIR}/Obligatorio - Full.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Full.o\" \"Obligatorio - Full.asm\" 
-	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Full.o"
-	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Full.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o".d 
+	@${RM} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o" 
+	@${FIXDEPS} dummy.d -e "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.err" $(SILENT) -c ${MP_AS} $(MP_EXTRA_AS_PRE) -q -p$(MP_PROCESSOR_OPTION)  -l\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.lst\" -e\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.err\" $(ASM_OPTIONS)    -o\"${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o\" \"Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.asm\" 
+	@${DEP_GEN} -d "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o"
+	@${FIXDEPS} "${OBJECTDIR}/Obligatorio - Parte 5 - Investigar el uso del LED RGB de la placa.o.d" $(SILENT) -rsi ${MP_AS_DIR} -c18 
 	
 endif
 
